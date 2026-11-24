@@ -1,9 +1,9 @@
 # ADR-0011: Use GitHub Projects instead of Jira for sprint tracking
 
-- **Status:** Proposed
+- **Status:** Accepted (PO Tan Dang, 2026-11-24, in chat)
 - **Date:** 2026-11-24
 - **Decided in:** MTG-2026-11-24-planning (D2)
-- **Deciders:** Tan Dang (Product Owner) — acceptance pending
+- **Deciders:** Tan Dang (Product Owner) — accepted 2026-11-24
 - **Supersedes (partly):** [ADR-0006](ADR-0006-docs-as-code.md) — only its line "Jira Free tracks day-to-day status; the backlog content stays in sync with `docs/01-product/backlog.md`". The rest of ADR-0006 (docs as code) stays valid.
 
 ## Context
