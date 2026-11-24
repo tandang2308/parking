@@ -33,7 +33,7 @@
 ## Action items
 | # | Action | Owner | Due | Status |
 |---|---|---|---|---|
-| A1 | Load OSM data (`supabase/data/osm_vung_tau.sql`) to the cloud DB via the SQL Editor (D1) | PO (Tan Dang) | Sprint 0 | Open |
+| A1 | Load OSM data (`supabase/data/osm_vung_tau.sql`) to the cloud DB via the SQL Editor (D1) | PO (Tan Dang) | Sprint 0 | Done (verified via cloud API 2026-11-24, MTG-2026-11-24-planning) |
 | A2 | Update SPEC-001: BR-13 attribution (D5), customer-only label rule (D2), map label language from app locale | Tech Lead | Sprint 1 start | Open |
 | A3 | Install the Android SDK and run the Android spike checks (D6) | TuyenCao (QA) | Sprint 1, first days | Open |
 | A4 | Data-quality / survey plan for unnamed and car-only OSM lots, feeding US-4.4 | supabase-dev | Sprint 1 | Open |
