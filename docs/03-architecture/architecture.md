@@ -15,8 +15,8 @@
            │ map tiles           └──────────────▲───────────────────┘
            ▼                                    │
  ┌──────────────────────┐              ┌────────┴─────────┐
- │ OSM tiles (MapTiler/ │              │ Supabase Studio  │
- │ Stadia free plan)    │              │ = Admin panel    │
+ │ OpenFreeMap vector   │              │ Supabase Studio  │
+ │ tiles (ADR-0009)     │              │ = Admin panel    │
  └──────────────────────┘              └──────────────────┘
  Navigation → deep link to Google Maps / Apple Maps app
  Crash/analytics → Firebase Crashlytics + Analytics
@@ -53,5 +53,5 @@ Key RPC: `nearby_lots(lat, lng, radius_m, vehicle_type)` → max 50 lots ordered
 | Item | Limit | Mitigation |
 |---|---|---|
 | Supabase | 500 MB DB, 1 GB storage, pauses after 7 days idle | Keep-alive GitHub Action, compress images |
-| Map tiles | Monthly request quota | Tile caching, usage monitoring |
+| Map tiles (OpenFreeMap, ADR-0009) | No quota, but no SLA (donation-funded) | Tile URL/style in config; fallback 4a/4b in ADR-0009; on-device caching |
 | GitHub Actions | 2,000 min/month (private repo) | Cache dependencies, run on PR only |

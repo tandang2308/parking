@@ -5,7 +5,7 @@
 | Sprint | Sprint Goal | Main epics |
 |---|---|---|
 | Sprint 0 | Repo, CI/CD, Supabase, Jira, Firebase set up; OSM data imported; backlog Ready | Setup, US-4.1 |
-| Sprint 1 | A user can give location consent, open the app and see their location + nearby lots on the map | E1 (incl. US-1.4 consent) |
+| Sprint 1 | A user can give location consent, open the app and see their location + nearby lots on the map | E1 (incl. US-1.4 consent) + ADR-0009 tile spike (≤ 1 day) |
 | Sprint 2 | Real Vũng Tàu data available; user can find a suitable lot and navigate | E4, E2, E3 |
 | Sprint 3 | Bilingual, consent-compliant app; owner can sign up and claim a lot | E5, E6 (part) |
 | Sprint 4 | Owners manage lots + live availability; field testing in Vũng Tàu | E6 |
@@ -16,3 +16,4 @@
 |---|---|---|
 | 2026-11-24 | Initial roadmap | MTG-2026-11-24-kickoff |
 | 2026-11-24 | Minimal location consent (US-1.4) moved into Sprint 1; full privacy policy stays in US-5.2 (Sprint 3) | MTG-2026-11-24-po-decisions |
+| 2026-11-24 | ADR-0009 tile rendering spike (≤ 1 day, flutter-dev) added to Sprint 1 | MTG-2026-11-24-po-decisions D8/D9 |

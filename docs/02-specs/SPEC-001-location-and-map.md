@@ -116,7 +116,7 @@ Figma: _TBD — required before stories are Ready (DoR)._
 - **BR-10 No server-side location (PDPL):** user/manual coordinates are sent only as `nearby_lots` parameters via HTTP **POST** body (never in the URL/query string), rounded to 4 decimals (~11 m) *(assumption — PO to confirm)*, never written to any table, and never sent to analytics/Crashlytics.
 - **BR-11 Distance on card:** computed client-side (haversine) from the current position (BR-8), not from the search centre.
 - **BR-12 Service area:** Vũng Tàu bounding box lat 10.30–10.45, lng 107.03–107.20 *(assumption — PO to confirm)*. Edges are **inclusive** (a point exactly on an edge is inside) (Q-QA-6, *Tech Lead decision — PO approves via PR*).
-- **BR-13 Tile attribution:** "© OpenStreetMap contributors" + tile provider credit must always be visible.
+- **BR-13 Tile attribution:** "© OpenStreetMap contributors" + tile provider credit must always be visible. Provider per ADR-0009: OpenFreeMap (vector) — exact credit text (e.g. "OpenFreeMap © OpenMapTiles Data from OpenStreetMap") to be confirmed in the Sprint 1 spike; text comes from tile config, not hard-coded.
 - **BR-14 Search point (D4):** for position-based triggers (BR-3 (a)–(c)) the search point is the current position (BR-8) if it is inside the service area, otherwise the default centre (BR-5). For "Search this area" it is the map centre (inside or outside the area).
 - **BR-15 Distance format (D3):** round the distance to the nearest 10 m first; if the rounded value is < 1000 m show metres (`"{m} m"`, e.g. "350 m", minimum "10 m"); otherwise km with one decimal (`"{km} km"`, e.g. "1.2 km"; 995 m → "1.0 km"). The decimal separator follows the locale: vi "1,2 km", en "1.2 km". *(locale separator: Tech Lead decision — PO approves via PR)*
 
@@ -190,7 +190,7 @@ POST /rest/v1/rpc/nearby_lots
 | NFR-1 | Pins visible ≤ 2 s (p75) after the position is known, on 4G, mid-range Android; ≤ 3 s on low-end device. Measured with a client timer (position known → pins rendered) logged in debug/profile builds without coordinates (same value as `duration_ms`), ≥ 20 runs per device; stopwatch runs are indicative only (Q-QA-9). *(Tech Lead decision — PO approves via PR)* |
 | NFR-2 | Map first tiles ≤ 3 s cold start on 4G; response ≤ 20 KB at 50 lots. RPC server time ≤ 300 ms p95 for ≤ 5,000 lots is a **DB performance check** (supabase-dev): `explain analyze` on a generated 5,000-lot local dataset, run once per sprint, informational — not a CI gate (Q-QA-9). *(Tech Lead decision — PO approves via PR)* |
 | NFR-3a | Tile caching: on-device HTTP cache (MIT-licensed package — Tech Lead to confirm; avoid GPL packages), TTL ≥ 7 days, no bulk prefetch (provider ToS). TTL is verified by config review / unit test of the cache settings (Q-QA-21). |
-| NFR-3b | Monthly tile quota monitoring with an alert at 80% is an **ops** requirement owned by the tile-provider ADR (kickoff A7 / MTG-2026-11-24-po-decisions A4); not an app AC and not tested in a sprint (Q-QA-21). *(Tech Lead decision — PO approves via PR)* |
+| NFR-3b | Monthly tile quota monitoring with an alert at 80% is an **ops** requirement owned by ADR-0009: **n/a for OpenFreeMap (no quota)**; required only if fallback 4a (Stadia/MapTiler) is used. Not an app AC and not tested in a sprint (Q-QA-21). |
 | NFR-4 | Offline: cached tiles + blue dot still work; lots show the error banner (US-1.2 AC5); last pins kept for the session only |
 | NFR-5 | Battery: foreground location only, distance filter 10 m, stream stopped when the app is backgrounded |
 | NFR-6 | Privacy/PDPL: BR-9, BR-10; logs must not contain coordinates (POST body only); Crashlytics breadcrumbs must not contain coordinates. Firebase Analytics/Crashlytics (free, ADR-0002) ship with **collection disabled by default** until the analytics-consent question (§9 item 4) is answered in SPEC-005; events in this section are implemented behind that switch and tested on a debug build with collection force-enabled (DebugView). Crashlytics has no Web SDK — Web is checked on Console/network only (Q-QA-20). *(Tech Lead decision — PO approves via PR)* |
@@ -308,7 +308,7 @@ Devices: per the test-strategy matrix (low-end Android, mid Android, iPhone Safa
 ## 9. Open questions (PO to decide)
 1. Confirm defaults: radius 1/3/5 km, 50-pin cap, default centre Bãi Trước, service-area box, rounding to 4 decimals. *(still open — assumptions)*
 2. ~~Pull minimal consent S1 into Sprint 1?~~ **Resolved — D1** (US-1.4).
-3. Tile provider (kickoff A7 / MTG-2026-11-24-po-decisions A4): MapTiler and Stadia free plans appear to be **non-commercial only** — verify current terms; acceptable for a free beta? **Still open — needs an ADR before Sprint 1** (also owns NFR-3b).
+3. ~~Tile provider~~ **Resolved 2026-11-24 by ADR-0009** (OpenFreeMap vector tiles, conditional on the Sprint 1 spike; MTG-2026-11-24-po-decisions D8/D9).
 4. Does Firebase Analytics need its own consent under PDPL (SPEC-005)? **Still open (legal/PO).** Interim Tech Lead default: collection disabled (NFR-6).
 5. ~~Hide inactive/closed lots?~~ **Resolved (Tech Lead decision):** E1 shows all rows; any active flag is specified in SPEC-004 (§5).
 6. ~~Manual position persistence?~~ **Resolved (Tech Lead decision):** session only (US-1.3 AC7).

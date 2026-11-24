@@ -60,7 +60,7 @@ Drivers in Vũng Tàu — especially tourists arriving by car from HCMC on weeke
 | Stale / wrong data | "Last verified" date, owner self-updates, user reports (later) |
 | Fake owner claims | Document + photo verification, admin approval, on-site visit if needed |
 | Poor GPS in small alleys | Allow user to adjust pin manually |
-| Free-tier limits (Supabase pause, tile quotas) | Keep-alive job, tile caching, usage alerts |
+| Free-tier limits (Supabase pause; tile provider without SLA) | Keep-alive job; tile provider in config with fallbacks (ADR-0009) |
 | Owners unwilling to pay later | Prove value with traffic stats before charging |
 
 ## 9. Change history
