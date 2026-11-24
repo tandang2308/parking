@@ -21,3 +21,4 @@ Templates: [planning](../templates/sprint-planning-template.md) · [review](../t
 |---|---|---|---|
 | [MTG-2026-11-24-kickoff](sprint-00/2026-11-24-kickoff.md) | 2026-11-24 | Kickoff | Scrum, zero-cost stack, owner portal free-first, docs-as-code (ADR-0001…0006) |
 | [MTG-2026-11-24-po-decisions](sprint-00/2026-11-24-po-decisions.md) | 2026-11-24 | Ad-hoc | PO decisions on QA questions: consent moved to Sprint 1 (US-1.4), distance format, out-of-area, radius reset, banner; rest delegated to Tech Lead (SPEC-001 v0.2) |
+| [MTG-2026-11-24-po-decisions-2](sprint-00/2026-11-24-po-decisions-2.md) | 2026-11-24 | Ad-hoc | OSM lots to cloud via SQL Editor (seed never), customer-only lots labelled, Q-QA-30/32 decided, OpenFreeMap attribution text, Android tester TuyenCao for ADR-0009 gate |

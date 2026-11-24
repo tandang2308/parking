@@ -37,10 +37,10 @@
 |---|---|---|---|---|
 | A1 | Update SPEC-001 to v0.2 with D1–D6 and resolve remaining Q-QA items | Tech Lead | 2026-11-24 | Done (PR #6 merged) |
 | A2 | Review Vietnamese strings in SPEC-001 §6 and approve the v0.2 PR | PO | Sprint 0 | Done (PR #6 merged by PO) |
-| A3 | Update `docs/06-qa/test-cases/E1.md` to SPEC-001 v0.2 (US-1.4 cases, resolved questions) | QA | Sprint 0 | Open |
+| A3 | Update `docs/06-qa/test-cases/E1.md` to SPEC-001 v0.2 (US-1.4 cases, resolved questions) | QA | Sprint 0 | Done (PR #11) |
 | A4 | Tile provider decision as an ADR (kickoff action A7, still open) | Tech Lead | Before Sprint 1 | Done (ADR-0009, D8) |
-| A6 | *(Addendum)* Tile rendering spike per ADR-0009 validation gate (≤ 1 day); record result in Sprint 1 review | flutter-dev | Sprint 1 | Open |
-| A5 | QA seed data incl. a point with 0 lots within 3 km (Q-QA-3) | supabase-dev | Sprint 1 | Open |
+| A6 | *(Addendum)* Tile rendering spike per ADR-0009 validation gate (≤ 1 day); record result in Sprint 1 review | flutter-dev | Sprint 1 | Partly done (desktop Web checked by PO; Android pending — TuyenCao, MTG-2026-11-24-po-decisions-2 A3) |
+| A5 | QA seed data incl. a point with 0 lots within 3 km (Q-QA-3) | supabase-dev | Sprint 1 | Done (PR #12) |
 
 ## Open questions / parking lot
 - Product Owner name: Tan Dang (resolved 2026-11-24; kickoff action A1 partly done — Scrum Master still open).

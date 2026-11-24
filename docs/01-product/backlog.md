@@ -32,10 +32,10 @@
 ### E4 — Admin & Data
 | ID | User story | SP | Status | Spec |
 |---|---|---|---|---|
-| US-4.1 | As an admin, I want to import existing Vũng Tàu parking data from OpenStreetMap | 3 | New | — |
+| US-4.1 | As an admin, I want to import existing Vũng Tàu parking data from OpenStreetMap _(Done in PR #12)_ | 3 | Done | — |
 | US-4.2 | As an admin, I want to add/edit/delete lots (via Supabase Studio) | 2 | New | — |
 | US-4.3 | As an admin, I want to mark the "last verified" date of a lot | 2 | New | — |
-| US-4.4 | As the team, we want to field-survey key areas (Bãi Sau, Bãi Trước, center…) | 5 | New | — |
+| US-4.4 | As the team, we want to field-survey key areas (Bãi Sau, Bãi Trước, center…). _Note: priority up: OSM has only 40 lots, 37 unnamed, mostly tagged car (MTG-2026-11-24-po-decisions-2)._ | 5 | New | — |
 
 ### E5 — Platform
 | ID | User story | SP | Status | Spec |
