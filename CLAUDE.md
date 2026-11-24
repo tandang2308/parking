@@ -30,6 +30,7 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 
 ## Commands
 Supabase project ref: `kiqqlbxqhuenuahbrcbl`. Schema changes only via migrations (ADR-0007), never in Studio.
+Every new table needs explicit `GRANT`s to `anon`/`authenticated` in its migration (cloud does not auto-grant; local does) plus RLS policies.
 - `npx supabase migration new <name>` — new migration in `supabase/migrations/`
 - `npx supabase start` / `stop` — local database (Docker; local ports are 553xx because Windows reserves 543xx)
 - `npx supabase db reset` — rebuild local DB from migrations
