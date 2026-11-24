@@ -14,6 +14,7 @@
 | US-1.1 | As a driver, I want to see my current position on a map, so that I can orient myself and find parking around me | 5 | New | SPEC-001 |
 | US-1.2 | As a driver, I want to see nearby parking lots as pins on the map, so that I can quickly pick the closest suitable one | 8 | New | SPEC-001 |
 | US-1.3 | As a driver, I want to adjust my position manually when GPS is inaccurate, so that nearby lots and distances are correct | 3 | New | SPEC-001 |
+| US-1.4 | As a driver, I want to be asked for consent before the app uses my location, so that my personal data is protected (PDPL) | 3 | New | SPEC-001 |
 
 ### E2 — Search & Filter
 | ID | User story | SP | Status | Spec |
@@ -40,7 +41,7 @@
 | ID | User story | SP | Status | Spec |
 |---|---|---|---|---|
 | US-5.1 | As a user, I want the app in Vietnamese and English | 3 | New | — |
-| US-5.2 | As a user, I want to give location consent and read the privacy policy | 3 | New | — |
+| US-5.2 | As a user, I want to give location consent and read the privacy policy. _Note: the minimal location consent screen moved to US-1.4 (Sprint 1) — MTG-2026-11-24-po-decisions; US-5.2 keeps the full privacy policy._ | 3 | New | — |
 
 ### E6 — Owner Portal
 | ID | User story | SP | Status | Spec |

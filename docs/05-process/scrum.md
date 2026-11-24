@@ -6,7 +6,7 @@
 ## Roles
 | Role | Person | Responsibility |
 |---|---|---|
-| Product Owner | _TBD_ | Owns backlog & priorities, accepts work, writes/approves specs |
+| Product Owner | Tan Dang | Owns backlog & priorities, accepts work, writes/approves specs |
 | Scrum Master | _TBD_ | Facilitates events, removes blockers, keeps minutes in `docs/04-meetings` |
 | Developers | Tech Lead, Devs, QA | Build, test, deliver Increment; Tech Lead owns architecture & ADRs; QA owns test strategy |
 

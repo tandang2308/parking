@@ -5,7 +5,7 @@ A story is **Ready** only when its spec section has acceptance criteria (see DoR
 
 | ID | Title | Epic | Status | Last updated |
 |---|---|---|---|---|
-| [SPEC-001](SPEC-001-location-and-map.md) | Location & Map | E1 | Draft | 2026-11-24 |
+| [SPEC-001](SPEC-001-location-and-map.md) | Location & Map | E1 | Draft (v0.2) | 2026-11-24 |
 | SPEC-002 | Search & Filter | E2 | To write | — |
 | SPEC-003 | Lot Details & Navigation | E3 | To write | — |
 | SPEC-004 | Admin & Data | E4 | To write | — |
