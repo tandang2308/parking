@@ -6,7 +6,7 @@
 | Type | Ad-hoc (async decision via chat) |
 | Facilitator | Claude main agent |
 | Note taker | Scrum Master agent |
-| Attendees | Product Owner (name _TBD_), Claude main agent |
+| Attendees | Tan Dang (Product Owner), Claude main agent |
 | Absent | _TBD_ |
 
 ## Agenda
@@ -40,4 +40,4 @@
 | A5 | QA seed data incl. a point with 0 lots within 3 km (Q-QA-3) | supabase-dev | Sprint 1 | Open |
 
 ## Open questions / parking lot
-- Product Owner name still _TBD_ (kickoff action A1).
+- Product Owner name: Tan Dang (resolved 2026-11-24; kickoff action A1 partly done — Scrum Master still open).
