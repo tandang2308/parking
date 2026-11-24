@@ -43,4 +43,8 @@ Every new table needs explicit `GRANT`s to `anon`/`authenticated` in its migrati
 - CLI defaults to the **local** DB. Cloud commands need `--remote`:
   `npx supabase db push --remote --dry-run` (preview), then `npx supabase db push --remote` (only after PR merge)
 
-_Flutter commands to be added when the app is created._
+Flutter app lives in `app/` (Flutter 3.38 stable). Run from `app/`:
+- `flutter analyze` and `flutter test` — both must pass before a PR (DoD)
+- `flutter run -d chrome` (Web) · `flutter run --profile -d <device>` (Android, FPS checks)
+- `flutter build web --release` · `flutter build apk --debug` (needs Android SDK)
+- Tile config via `--dart-define` (`TILE_STYLE_URL`, `TILE_ATTRIBUTION`, `TILE_RENDERER`, …) — see `app/README.md`, ADR-0009
