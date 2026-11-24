@@ -30,6 +30,7 @@ Skills (slash commands) live in `.claude/skills/`: `/minutes`, `/new-adr`, `/dep
 People: PO = Tan Dang · Scrum Master = Khoi Dang.
 
 ## Safety
+- Guardrail hook `.claude/hooks/guard.js` (ADR-0010) blocks: cloud DB reset, push to `main`, force-push, `--no-verify`, `.env` access; cloud DB changes need human confirmation. Don't try to work around it — if blocked, stop and tell the user.
 - Never commit secrets (API keys, Supabase service key, tokens, `.env`). Only the Supabase `anon` key may be in the client.
 - Location data is personal data (Vietnam PDPL): no server-side storage of user location unless a spec requires it.
 
