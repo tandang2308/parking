@@ -1,6 +1,6 @@
 # Spike: ADR-0009 map tile rendering (OpenFreeMap vector tiles)
 
-| Status | In progress — desk part done, **device/browser measurements pending (human)** · 2026-11-24 · Owner: flutter-dev |
+| Status | In progress — desk part done; **desktop Web checked by PO (§8)**; low-end Android + phone browser **pending (human)** · 2026-11-24 · Owner: flutter-dev |
 |---|---|
 
 - **For:** [ADR-0009](../adr/ADR-0009-map-tile-provider.md) "Validation gate (Sprint 1)" · action A6 in `docs/04-meetings/sprint-00/2026-11-24-po-decisions.md`
@@ -99,3 +99,27 @@ Record for each device: model + Android version/RAM, browser, network, FPS, jank
 3. **Web cache vs NFR-3a "on-device HTTP cache":** on web we rely on the browser HTTP cache (provider-controlled headers), not an app-controlled TTL. Acceptable for NFR-3a?
 4. **Label language:** the liberty style shows `name:latin`/`name` (Vietnamese in Vũng Tàu). For the English UI, should labels switch to `name:en` (`StyleReader(language: 'en')`)? Not done.
 5. **NFR-1 pins on low-end** cannot be checked before US-1.2; does the PO accept closing the gate with a dummy-marker test, or defer that item?
+
+## 8. Human results
+
+### 8.1 Desktop Web — Tan Dang (PO), 2026-11-24
+Setup: Windows 11 PC, desktop Chrome, **debug** build via `flutter run -d web-server --web-port 8080` (opening Chrome automatically with `-d chrome` failed: "Failed to launch browser after 3 tries" — use `-d web-server` and open the URL manually). PC network, not 4G.
+
+| Gate item (§5) | Result | Note |
+|---|---|---|
+| 7 Renders on Flutter Web (desktop Chrome) | **Pass** | Vũng Tàu map renders, zoom 13–18 |
+| 11 Vietnamese diacritics on labels | **Acceptable** (PO) | Re-check on Android; report any specific broken names |
+| 9 Smooth panning/zooming | **OK on desktop** | Desktop is much faster than a low-end phone — does **not** close the ≥ 30 FPS Android item |
+| 4 Attribution always visible | **Pass** | "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" visible |
+| 8 First tiles time | **≈ 2 s** after full restart (indicative) | Debug build on PC network — not the NFR-2 4G cold-start measurement |
+
+### 8.2 Still open before the gate can pass
+- Low-end Android phone in profile mode: ≥ 30 FPS, first tiles ≤ 3 s on 4G, diacritics (needs Android SDK on a team PC + a phone; owner: QA / to assign).
+- Chrome on a phone (Web build).
+- Offline re-open with cached tiles (NFR-3a runtime).
+
+### 8.3 Screenshot and finding (PO, desktop Web)
+![Vũng Tàu map, desktop Chrome, OpenFreeMap liberty](img/2026-11-24-desktop-web-po.png)
+
+- Diacritics render correctly ("Hồ Mây Thượng", "Ngã tư Nguyễn An Ninh", "Xóm Lưới", "Hoàng Hoa Thám", "Bãi Sau").
+- **Finding:** some labels appear in **English** where OSM has an English name ("Front Beach" instead of Bãi Trước, "Coconut Bay", "Bau Sen Lake", "September 2", "Thuy Van Street"). The style picks English/international names. Follow-up for Sprint 1: set the style label language from the app locale (vi → Vietnamese `name`, en → `name:en`) — open question 4 in §7.
