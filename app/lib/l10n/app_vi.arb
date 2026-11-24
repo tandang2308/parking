@@ -1,0 +1,9 @@
+{
+  "@@locale": "vi",
+  "consent_title": "Cho phép truy cập vị trí",
+  "consent_body": "ParkFinder chỉ dùng vị trí của bạn khi bạn đang mở ứng dụng, để hiển thị các bãi xe gần bạn. Vị trí không được lưu trên máy chủ của chúng tôi. Bạn có thể tắt quyền này bất cứ lúc nào trong cài đặt của thiết bị hoặc trình duyệt.",
+  "btn_allow": "Cho phép",
+  "btn_not_now": "Để sau",
+  "banner_location_needed": "Bật định vị để xem bãi xe gần bạn",
+  "btn_enable": "Bật"
+}
