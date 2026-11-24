@@ -28,7 +28,7 @@ Every artifact has an ID so we can trace *idea → decision → spec → code �
 | Spec | `SPEC-<nnn>` | `SPEC-006` Owner Portal |
 | Architecture decision | `ADR-<nnnn>` | `ADR-0002` Zero-cost stack |
 | Meeting minutes | `MTG-<yyyy-mm-dd>-<type>` | `MTG-2026-11-24-kickoff` |
-| Test case | `TC-<epic>.<n>` | `TC-6.2.1` |
+| Test case | `TC-<epic>.<story>.<n>` | `TC-6.2.1` |
 
 **Linking rules**
 - Git branch: `feature/US-6.2-claim-lot`

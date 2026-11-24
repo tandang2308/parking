@@ -11,9 +11,9 @@
 ### E1 — Location & Map
 | ID | User story | SP | Status | Spec |
 |---|---|---|---|---|
-| US-1.1 | As a driver, I want to see my current position on a map | 5 | New | — |
-| US-1.2 | As a driver, I want to see nearby parking lots as pins on the map | 8 | New | — |
-| US-1.3 | As a driver, I want to adjust my position manually when GPS is inaccurate | 3 | New | — |
+| US-1.1 | As a driver, I want to see my current position on a map, so that I can orient myself and find parking around me | 5 | New | SPEC-001 |
+| US-1.2 | As a driver, I want to see nearby parking lots as pins on the map, so that I can quickly pick the closest suitable one | 8 | New | SPEC-001 |
+| US-1.3 | As a driver, I want to adjust my position manually when GPS is inaccurate, so that nearby lots and distances are correct | 3 | New | SPEC-001 |
 
 ### E2 — Search & Filter
 | ID | User story | SP | Status | Spec |
