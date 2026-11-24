@@ -23,6 +23,10 @@
 ## Test case naming
 `TC-<epic>.<story>.<n>` e.g. `TC-6.2.1` — stored in `06-qa/test-cases/E<n>.md`, linked from the story.
 
+| Epic | Test cases |
+|---|---|
+| E1 Location & Map | [test-cases/E1.md](test-cases/E1.md) |
+
 ## Fixed test locations (Vũng Tàu)
 | Name | Purpose |
 |---|---|
