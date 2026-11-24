@@ -57,9 +57,9 @@
 ## Post-MVP (not prioritised yet)
 | ID | Epic / idea | Notes |
 |---|---|---|
-| E7 | Monetization | Featured listing subscription first; VietQR transfer; needs business registration + e-invoice |
+| E7 | Monetization | Featured listing subscription first; VietQR transfer; needs business registration + e-invoice. _Tech note (PO, 2026-11-24): if E7 needs TypeScript server code (Supabase Edge Functions for payments/webhooks), evaluate the Effect library (https://effect.website, TypeScript-only; v4 maturity unknown) vs plain TypeScript via `/new-adr` before starting. Not adopted for the MVP — no TypeScript business logic today._ |
 | E8 | Booking & payment | Commission model; MoMo/ZaloPay/VNPay |
 | E9 | Reviews & user reports | "Lot is full", "price changed" |
-| E10 | Dedicated admin web panel | Replace Supabase Studio |
+| E10 | Dedicated admin web panel | Replace Supabase Studio. _Tech note: if built in TypeScript, include the Effect evaluation from E7 in its ADR._ |
 | E11 | Store release | Google Play ($25) + App Store ($99/yr) |
 | E12 | Multi-city expansion | Đà Lạt, Nha Trang, HCMC center |
