@@ -1,8 +1,8 @@
 # ADR-0009: Map tile provider for flutter_map (free for beta)
 
-- **Status:** Proposed
+- **Status:** Accepted — conditional on the Sprint 1 validation spike (see "Validation gate"); if the spike fails, a new ADR supersedes this one with fallback 4a
 - **Date:** 2026-11-24
-- **Decided in:** _pending (PO review)_
+- **Decided in:** MTG-2026-11-24-po-decisions (D8, D9) — accepted by PO Tan Dang; assumptions 4a, spike ≤ 1 day (flutter-dev) and ≥ 30 FPS confirmed
 - **Deciders:** Tan Dang (PO), on Tech Lead proposal
 - **Refines:** ADR-0002 (its "OSM tiles from a free plan (MapTiler or Stadia)" assumption). ADR-0002 stays Accepted and unchanged.
 - **Closes when accepted:** kickoff A7 · MTG-2026-11-24-po-decisions A4 · SPEC-001 §9 Q3 · owns SPEC-001 NFR-3b
@@ -27,20 +27,20 @@
 | Bulk/offline prefetch | Allowed via self-hosting; public instance: be polite | Per ToS — To verify | Per ToS — To verify | Forbidden |
 | Ops: quota monitoring (NFR-3b) | n/a (no quota) | Required (suspension risk) | Required | n/a, but blocking risk |
 
-## Decision (proposed)
+## Decision
 1. **Primary: Option A — OpenFreeMap public instance, vector tiles**, rendered with `flutter_map_vector_tiles` (BSD-3-Clause). Only option that is $0, has no quota and permits the planned commercial use.
 2. **Option D (OSM standard tiles) is allowed for local development only**, never in a distributed build.
 3. **Configuration, not code:** tile/style URL, attribution text, max zoom and renderer type (vector/raster) live in one app config (e.g. `--dart-define` / config file). Switching provider must not need code changes beyond config, except vector↔raster which swaps the layer widget behind one abstraction.
 4. **Fallback (in order)**, if the spike fails or the public instance becomes unreliable/limited:
-   - a. Raster from Stadia or MapTiler **free plan for the closed, non-revenue beta only** (assumption — PO to confirm this is acceptable under their terms), moving to their **paid plan** (~US$20/mo, needs a new ADR per ADR-0002) before any monetisation; or
+   - a. Raster from Stadia or MapTiler **free plan for the closed, non-revenue beta only** (PO confirmed 2026-11-24, D9; provider terms still To verify), moving to their **paid plan** (~US$20/mo, needs a new ADR per ADR-0002) before any monetisation; or
    - b. Self-hosted OpenFreeMap / PMTiles extract of the Vũng Tàu region on free static hosting (cost and hosting choice — new ADR).
 
-### Acceptance gate (before this ADR becomes Accepted)
-A time-boxed technical spike in Sprint 1 (assumption — PO to confirm ≤ 1 day, owner flutter-dev):
+### Validation gate (Sprint 1)
+A time-boxed technical spike in Sprint 1 (≤ 1 day, owner flutter-dev — PO confirmed, D9):
 - Render Vũng Tàu at zoom 13–18 with the `liberty` style on a **low-end Android** device and **Flutter Web** (Chrome desktop + mobile).
-- Pass: first tiles ≤ 3 s cold start on 4G (NFR-2); pins still ≤ 3 s on low-end (NFR-1); no visible jank when panning/zooming (target ≥ 30 FPS on low-end in profile mode — assumption — PO to confirm); labels in Vietnamese render correctly (diacritics).
+- Pass: first tiles ≤ 3 s cold start on 4G (NFR-2); pins still ≤ 3 s on low-end (NFR-1); no visible jank when panning/zooming (target ≥ 30 FPS on low-end in profile mode — PO confirmed, D9); labels in Vietnamese render correctly (diacritics).
 - Verify the caching approach meets NFR-3a with an MIT/BSD-licensed solution.
-- If any check fails → apply fallback 4a and record the result in this ADR (or a superseding one).
+- If any check fails → write a new ADR that supersedes this one with fallback 4a. Record the spike result (pass/fail + measurements) in the Sprint 1 review minutes.
 
 ## Consequences
 **Positive**
@@ -54,7 +54,7 @@ A time-boxed technical spike in Sprint 1 (assumption — PO to confirm ≤ 1 day
 - Extra dependency (`flutter_map_vector_tiles`) and styling work (fonts/sprites/glyphs also fetched from the provider).
 - Tile requests still reveal viewed area + IP to the provider (true for every option); must be stated in the privacy notice (SPEC-005).
 
-**Follow-ups (after acceptance; not done in this ADR)**
+**Follow-ups** (done in the acceptance PR on 2026-11-24 unless marked open: SPEC-001 BR-13/NFR-3b/§9 Q3, architecture.md, PRD, CLAUDE.md, A7/A4 closed; **open:** exact attribution text, NFR-3a cache approach — both settled by the spike)
 - SPEC-001 BR-13 / §6: exact attribution text, e.g. "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" (To verify), plus link behaviour; update TC-1.1.21.
 - SPEC-001 NFR-3a: caching approach for vector tiles (package built-in cache vs HTTP cache; avoid GPL packages such as `flutter_map_tile_caching` — licence To verify).
 - SPEC-001 NFR-3b: mark "n/a for OpenFreeMap; required if fallback 4a is used (80% alert on provider dashboard)".

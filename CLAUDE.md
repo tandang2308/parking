@@ -12,7 +12,7 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 3. `docs/05-process/scrum.md` — Definition of Ready / Done
 
 ## Tech stack (MVP must cost $0 — see ADR-0002)
-- Client: Flutter (Android + Web), `flutter_map` with OSM tiles
+- Client: Flutter (Android + Web), `flutter_map` + `flutter_map_vector_tiles` with OpenFreeMap vector tiles (OSM data, ADR-0009; tile URL/style in config, never hard-coded; tile.openstreetmap.org only for local dev)
 - Backend: Supabase (PostgreSQL + PostGIS, Auth, Storage, Row Level Security)
 - Admin: Supabase Studio · CI: GitHub Actions · Beta: Firebase App Distribution
 - Do not add paid services or dependencies without a new ADR.

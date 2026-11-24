@@ -29,14 +29,17 @@
 | D5 | Each new search starts at 1 km; "Expand to 3 km" applies only to the current search. | SPEC-001 v0.2, US-1.2 |
 | D6 | Low-accuracy banner is dismissible; it does not come back for the rest of the session. | SPEC-001 v0.2 |
 | D7 | Remaining 17 QA questions delegated to the Tech Lead, resolved in SPEC-001 v0.2; PO approves via the PR. | SPEC-001 v0.2 |
+| D8 | *(Addendum, later on 2026-11-24)* ADR-0009 accepted: OpenFreeMap public vector tiles via `flutter_map_vector_tiles`, tile URL/style as config — **conditional on a Sprint 1 validation spike**; if it fails, a new ADR supersedes it with fallback 4a. | ADR-0009 |
+| D9 | *(Addendum)* PO confirmed ADR-0009 assumptions: fallback 4a (Stadia/MapTiler free plan) acceptable only for the closed, non-revenue beta; spike time-box ≤ 1 day, owner flutter-dev; smoothness target ≥ 30 FPS on low-end Android. | ADR-0009 |
 
 ## Action items
 | # | Action | Owner | Due | Status |
 |---|---|---|---|---|
-| A1 | Update SPEC-001 to v0.2 with D1–D6 and resolve remaining Q-QA items | Tech Lead | 2026-11-24 | In progress |
-| A2 | Review Vietnamese strings in SPEC-001 §6 and approve the v0.2 PR | PO | Sprint 0 | Open |
+| A1 | Update SPEC-001 to v0.2 with D1–D6 and resolve remaining Q-QA items | Tech Lead | 2026-11-24 | Done (PR #6 merged) |
+| A2 | Review Vietnamese strings in SPEC-001 §6 and approve the v0.2 PR | PO | Sprint 0 | Done (PR #6 merged by PO) |
 | A3 | Update `docs/06-qa/test-cases/E1.md` to SPEC-001 v0.2 (US-1.4 cases, resolved questions) | QA | Sprint 0 | Open |
-| A4 | Tile provider decision as an ADR (kickoff action A7, still open) | Tech Lead | Before Sprint 1 | Open |
+| A4 | Tile provider decision as an ADR (kickoff action A7, still open) | Tech Lead | Before Sprint 1 | Done (ADR-0009, D8) |
+| A6 | *(Addendum)* Tile rendering spike per ADR-0009 validation gate (≤ 1 day); record result in Sprint 1 review | flutter-dev | Sprint 1 | Open |
 | A5 | QA seed data incl. a point with 0 lots within 3 km (Q-QA-3) | supabase-dev | Sprint 1 | Open |
 
 ## Open questions / parking lot

@@ -14,4 +14,4 @@ Create from [`../../templates/adr-template.md`](../../templates/adr-template.md)
 | [ADR-0006](ADR-0006-docs-as-code.md) | Documentation as code in the Git repo | Accepted | 2026-11-24 |
 | [ADR-0007](ADR-0007-database-migrations-supabase-cli.md) | Database changes via Supabase CLI migrations | Accepted | 2026-11-24 |
 | [ADR-0008](ADR-0008-ai-agent-team.md) | Use a team of Claude Code sub-agents to assist development | Accepted | 2026-11-24 |
-| [ADR-0009](ADR-0009-map-tile-provider.md) | Map tile provider for flutter_map (free for beta) | Proposed | 2026-11-24 |
+| [ADR-0009](ADR-0009-map-tile-provider.md) | Map tile provider for flutter_map (free for beta) | Accepted (conditional on Sprint 1 spike) | 2026-11-24 |
