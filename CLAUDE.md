@@ -31,8 +31,9 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 ## Commands
 Supabase project ref: `kiqqlbxqhuenuahbrcbl`. Schema changes only via migrations (ADR-0007), never in Studio.
 - `npx supabase migration new <name>` — new migration in `supabase/migrations/`
-- `npx supabase start` / `stop` — local database (Docker)
+- `npx supabase start` / `stop` — local database (Docker; local ports are 553xx because Windows reserves 543xx)
 - `npx supabase db reset` — rebuild local DB from migrations
-- `npx supabase db push` — apply migrations to the cloud project (after PR merge)
+- CLI defaults to the **local** DB. Cloud commands need `--remote`:
+  `npx supabase db push --remote --dry-run` (preview), then `npx supabase db push --remote` (only after PR merge)
 
 _Flutter commands to be added when the app is created._
