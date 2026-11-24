@@ -1,0 +1,27 @@
+{
+  "@@locale": "en",
+  "consent_title": "Allow location access",
+  "@consent_title": {
+    "description": "SPEC-001 §6, US-1.4 AC2: title of consent screen S1."
+  },
+  "consent_body": "ParkFinder uses your location only while the app is open, to show parking lots near you. Your location is not stored on our servers. You can turn this off at any time in your device or browser settings.",
+  "@consent_body": {
+    "description": "SPEC-001 §6, US-1.4 AC2: minimal privacy notice on S1."
+  },
+  "btn_allow": "Allow",
+  "@btn_allow": {
+    "description": "SPEC-001 §6, US-1.4 AC3: consent button."
+  },
+  "btn_not_now": "Not now",
+  "@btn_not_now": {
+    "description": "SPEC-001 §6, US-1.4 AC4: decline button."
+  },
+  "banner_location_needed": "Turn on location to see lots near you",
+  "@banner_location_needed": {
+    "description": "SPEC-001 §6, US-1.1 AC3: map banner when location is not used."
+  },
+  "btn_enable": "Enable",
+  "@btn_enable": {
+    "description": "SPEC-001 §6, US-1.1 AC3: banner action, reopens S1 after a decline."
+  }
+}
