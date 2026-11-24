@@ -24,6 +24,9 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 - Behaviour or design changed → update the spec / architecture doc in the same PR.
 - Never delete docs; mark them `Superseded` or `Deprecated`.
 
+## AI agent team
+Role agents live in `.claude/agents/` (see `docs/05-process/ai-agents.md`, ADR-0008). Sub-agents never commit, push or touch the cloud; the main agent reviews their output first.
+
 ## Safety
 - Never commit secrets (API keys, Supabase service key, tokens, `.env`). Only the Supabase `anon` key may be in the client.
 - Location data is personal data (Vietnam PDPL): no server-side storage of user location unless a spec requires it.

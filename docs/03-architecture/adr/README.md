@@ -13,3 +13,4 @@ Create from [`../../templates/adr-template.md`](../../templates/adr-template.md)
 | [ADR-0005](ADR-0005-beta-distribution-android-web.md) | Beta via Firebase App Distribution + Web, no store release | Accepted | 2026-11-24 |
 | [ADR-0006](ADR-0006-docs-as-code.md) | Documentation as code in the Git repo | Accepted | 2026-11-24 |
 | [ADR-0007](ADR-0007-database-migrations-supabase-cli.md) | Database changes via Supabase CLI migrations | Accepted | 2026-11-24 |
+| [ADR-0008](ADR-0008-ai-agent-team.md) | Use a team of Claude Code sub-agents to assist development | Accepted | 2026-11-24 |
