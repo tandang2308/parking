@@ -117,3 +117,9 @@ Setup: Windows 11 PC, desktop Chrome, **debug** build via `flutter run -d web-se
 - Low-end Android phone in profile mode: ≥ 30 FPS, first tiles ≤ 3 s on 4G, diacritics (needs Android SDK on a team PC + a phone; owner: QA / to assign).
 - Chrome on a phone (Web build).
 - Offline re-open with cached tiles (NFR-3a runtime).
+
+### 8.3 Screenshot and finding (PO, desktop Web)
+![Vũng Tàu map, desktop Chrome, OpenFreeMap liberty](img/2026-11-24-desktop-web-po.png)
+
+- Diacritics render correctly ("Hồ Mây Thượng", "Ngã tư Nguyễn An Ninh", "Xóm Lưới", "Hoàng Hoa Thám", "Bãi Sau").
+- **Finding:** some labels appear in **English** where OSM has an English name ("Front Beach" instead of Bãi Trước, "Coconut Bay", "Bau Sen Lake", "September 2", "Thuy Van Street"). The style picks English/international names. Follow-up for Sprint 1: set the style label language from the app locale (vi → Vietnamese `name`, en → `name:en`) — open question 4 in §7.
