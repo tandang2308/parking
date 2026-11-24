@@ -9,6 +9,8 @@ Requires Flutter 3.38.x stable. All commands run from this `app/` folder.
 ```sh
 flutter pub get
 flutter run -d chrome                 # Web (debug)
+flutter run -d web-server --web-port 8080   # Web (debug) if Chrome fails to launch on Windows
+                                      # ("Failed to launch browser") — then open http://localhost:8080 yourself
 flutter run -d <android-device-id>    # Android (debug); list devices with `flutter devices`
 flutter run --profile -d <device-id>  # Profile mode, for performance/FPS checks
 ```

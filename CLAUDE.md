@@ -45,6 +45,7 @@ Every new table needs explicit `GRANT`s to `anon`/`authenticated` in its migrati
 
 Flutter app lives in `app/` (Flutter 3.38 stable). Run from `app/`:
 - `flutter analyze` and `flutter test` — both must pass before a PR (DoD)
-- `flutter run -d chrome` (Web) · `flutter run --profile -d <device>` (Android, FPS checks)
+- `flutter run -d web-server --web-port 8080` then open http://localhost:8080 (Web; `-d chrome` fails to launch Chrome on the PO's Windows PC) · `flutter run --profile -d <device>` (Android, FPS checks)
+- The PO's terminal is **Windows PowerShell 5.1**: give the user PowerShell commands (`;` not `&&`, no `!` prefix) when they run things in their own window
 - `flutter build web --release` · `flutter build apk --debug` (needs Android SDK)
 - Tile config via `--dart-define` (`TILE_STYLE_URL`, `TILE_ATTRIBUTION`, `TILE_RENDERER`, …) — see `app/README.md`, ADR-0009
