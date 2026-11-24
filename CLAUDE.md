@@ -29,4 +29,10 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 - Location data is personal data (Vietnam PDPL): no server-side storage of user location unless a spec requires it.
 
 ## Commands
-_To be added in Sprint 0 when the Flutter and Supabase projects are created._
+Supabase project ref: `kiqqlbxqhuenuahbrcbl`. Schema changes only via migrations (ADR-0007), never in Studio.
+- `npx supabase migration new <name>` — new migration in `supabase/migrations/`
+- `npx supabase start` / `stop` — local database (Docker)
+- `npx supabase db reset` — rebuild local DB from migrations
+- `npx supabase db push` — apply migrations to the cloud project (after PR merge)
+
+_Flutter commands to be added when the app is created._

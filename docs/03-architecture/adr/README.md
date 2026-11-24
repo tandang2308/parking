@@ -12,3 +12,4 @@ Create from [`../../templates/adr-template.md`](../../templates/adr-template.md)
 | [ADR-0004](ADR-0004-owner-registration-free-first.md) | Owner registration free in MVP, charge later | Accepted | 2026-11-24 |
 | [ADR-0005](ADR-0005-beta-distribution-android-web.md) | Beta via Firebase App Distribution + Web, no store release | Accepted | 2026-11-24 |
 | [ADR-0006](ADR-0006-docs-as-code.md) | Documentation as code in the Git repo | Accepted | 2026-11-24 |
+| [ADR-0007](ADR-0007-database-migrations-supabase-cli.md) | Database changes via Supabase CLI migrations | Accepted | 2026-11-24 |
