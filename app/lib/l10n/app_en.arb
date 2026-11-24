@@ -22,6 +22,54 @@
   },
   "btn_enable": "Enable",
   "@btn_enable": {
-    "description": "SPEC-001 §6, US-1.1 AC3: banner action, reopens S1 after a decline."
+    "description": "SPEC-001 §6, US-1.1 AC3–AC5: banner action (reopens S1 after a decline, re-requests the permission, or opens settings / the Web unblock guide)."
+  },
+  "banner_location_off": "Location is off",
+  "@banner_location_off": {
+    "description": "SPEC-001 §6, US-1.1 AC6: banner when device location services are off (Android)."
+  },
+  "btn_turn_on": "Turn on",
+  "@btn_turn_on": {
+    "description": "SPEC-001 §6, US-1.1 AC6: opens the Android location settings."
+  },
+  "web_unblock_title": "Location is blocked",
+  "@web_unblock_title": {
+    "description": "SPEC-001 §6, US-1.1 AC5: Web unblock guide title."
+  },
+  "web_unblock_guide": "Location is blocked for this site. Open your browser's site settings, allow Location, then reload the page.",
+  "@web_unblock_guide": {
+    "description": "SPEC-001 §6, US-1.1 AC5: Web unblock guide text."
+  },
+  "btn_ok": "OK",
+  "@btn_ok": {
+    "description": "SPEC-001 §6: closes the Web unblock guide."
+  },
+  "hint_locating": "Locating…",
+  "@hint_locating": {
+    "description": "SPEC-001 §6, US-1.1 AC9: hint while a last-known position is shown."
+  },
+  "banner_no_fix": "Can't get your location — adjust manually?",
+  "@banner_no_fix": {
+    "description": "SPEC-001 §6, US-1.1 AC9: banner after the 10 s timeout without any position."
+  },
+  "btn_adjust": "Adjust",
+  "@btn_adjust": {
+    "description": "SPEC-001 §6, US-1.1 AC9 / US-1.3 AC2: starts adjust mode."
+  },
+  "out_of_area": "ParkFinder currently covers Vũng Tàu only",
+  "@out_of_area": {
+    "description": "SPEC-001 §6, US-1.1 AC10: banner when the user is outside the service area."
+  },
+  "btn_go_vung_tau": "Go to Vũng Tàu",
+  "@btn_go_vung_tau": {
+    "description": "SPEC-001 §6, US-1.1 AC10: moves the camera to the default centre."
+  },
+  "a11y_dismiss": "Dismiss",
+  "@a11y_dismiss": {
+    "description": "SPEC-001 §6, NFR-8: semantics label of a banner close (×) action."
+  },
+  "a11y_my_location": "My location",
+  "@a11y_my_location": {
+    "description": "SPEC-001 §6, NFR-8, US-1.1 AC8: label of the \"My location\" button."
   }
 }

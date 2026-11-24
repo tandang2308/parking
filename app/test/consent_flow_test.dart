@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:parkfinder/config/tile_config.dart';
 import 'package:parkfinder/features/consent/consent_record.dart';
 import 'package:parkfinder/features/consent/consent_screen.dart';
-import 'package:parkfinder/features/location/location_permission_service.dart';
+import 'package:parkfinder/features/location/location_service.dart';
 import 'package:parkfinder/main.dart';
 
 import 'helpers/fakes.dart';
@@ -49,7 +49,7 @@ const _vi = (
 Future<void> _launch(
   WidgetTester tester,
   FakeConsentStore store,
-  FakeLocationPermissionService permissions, {
+  FakeLocationService permissions, {
   int consentVersion = 1,
 }) async {
   // Unmount any previous app so the relaunch starts with fresh state.
@@ -59,7 +59,7 @@ Future<void> _launch(
       tileConfig: const TileConfig(),
       styleLoader: _pendingStyle,
       consentStore: store,
-      permissionService: permissions,
+      locationService: permissions,
       consentVersion: consentVersion,
     ),
   );
@@ -84,7 +84,7 @@ void main() {
         (tester) async {
       _setLocale(tester, const Locale('en'));
       final store = FakeConsentStore();
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       // TC-1.4.1 step 2: observe ≥ 15 s without tapping.
@@ -92,21 +92,21 @@ void main() {
 
       expect(find.byType(ConsentScreen), findsOneWidget);
       expect(find.byType(FlutterMap), findsNothing);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
       expect(store.saveCalls, 0);
     });
 
     testWidgets('no stored answer after closing without answering (TC-1.4.9)',
         (tester) async {
       final store = FakeConsentStore();
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await _launch(tester, store, permissions); // relaunch, not answered
 
       expect(find.byType(ConsentScreen), findsOneWidget);
       expect(store.record, isNull);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
     });
   });
 
@@ -114,11 +114,11 @@ void main() {
     testWidgets('stores granted + version + timestamp, requests permission, '
         'shows the map', (tester) async {
       final store = FakeConsentStore();
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
       final before = DateTime.now().toUtc();
 
       await _launch(tester, store, permissions, consentVersion: 4);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
 
       await tester.tap(find.byKey(_allow));
       await tester.pump();
@@ -137,25 +137,28 @@ void main() {
       expect(find.byKey(_banner), findsNothing);
     });
 
-    testWidgets('permission denied after Allow does not crash (AC8 smoke)',
-        (tester) async {
+    testWidgets('Allow + OS denial → map with banner_location_needed '
+        '(US-1.1 AC4), no crash', (tester) async {
       final store = FakeConsentStore();
-      final permissions = FakeLocationPermissionService(
-        LocationPermissionStatus.denied,
+      final permissions = FakeLocationService(
+        requestResult: LocationPermissionStatus.denied,
       );
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_allow));
       await tester.pump();
+      await tester.pump();
 
       expect(find.byType(FlutterMap), findsOneWidget);
+      expect(find.byKey(_banner), findsOneWidget);
+      expect(store.record!.result, ConsentResult.granted);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('relaunch with granted → map directly, S1 not shown',
         (tester) async {
       final store = FakeConsentStore(consentRecord(ConsentResult.granted));
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
 
@@ -170,7 +173,7 @@ void main() {
         'Enable reopens S1 (TC-1.4.3)', (tester) async {
       _setLocale(tester, const Locale('en'));
       final store = FakeConsentStore();
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_notNow));
@@ -178,7 +181,7 @@ void main() {
 
       expect(store.record!.result, ConsentResult.declined);
       expect(store.record!.version, 1);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
       expect(find.byType(FlutterMap), findsOneWidget);
       expect(find.byKey(_banner), findsOneWidget);
       expect(find.text(_en.banner), findsOneWidget);
@@ -189,19 +192,19 @@ void main() {
       expect(find.byType(ConsentScreen), findsNothing);
       expect(find.byType(FlutterMap), findsOneWidget);
       expect(find.byKey(_banner), findsOneWidget);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
 
       // "Enable" reopens S1, not the OS prompt.
       await tester.tap(find.byKey(_enable));
       await tester.pump();
       expect(find.byType(ConsentScreen), findsOneWidget);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
     });
 
     testWidgets('Enable → Allow stores granted and requests permission '
         '(TC-1.4.8)', (tester) async {
       final store = FakeConsentStore(consentRecord(ConsentResult.declined));
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_enable));
@@ -225,7 +228,7 @@ void main() {
     testWidgets('Enable → Not now again keeps declined and the banner',
         (tester) async {
       final store = FakeConsentStore(consentRecord(ConsentResult.declined));
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_enable));
@@ -235,7 +238,7 @@ void main() {
 
       expect(store.record!.result, ConsentResult.declined);
       expect(find.byKey(_banner), findsOneWidget);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
     });
   });
 
@@ -244,13 +247,13 @@ void main() {
       testWidgets('older stored version (${result.name}) → S1 again, '
           'no location call (TC-1.4.4)', (tester) async {
         final store = FakeConsentStore(consentRecord(result, version: 1));
-        final permissions = FakeLocationPermissionService();
+        final permissions = FakeLocationService();
 
         await _launch(tester, store, permissions, consentVersion: 2);
 
         expect(find.byType(ConsentScreen), findsOneWidget);
         expect(find.byType(FlutterMap), findsNothing);
-        expect(permissions.requestCalls, 0);
+        expect(permissions.totalCalls, 0); // BR-9: no location API at all
       });
     }
   });
@@ -258,7 +261,7 @@ void main() {
   group('storage unavailable (D4)', () {
     testWidgets('load failure → S1, no crash', (tester) async {
       final store = FakeConsentStore()..failLoad = true;
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
 
@@ -269,7 +272,7 @@ void main() {
     testWidgets('save failure on Allow → map + permission request, no crash',
         (tester) async {
       final store = FakeConsentStore()..failSave = true;
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_allow));
@@ -283,7 +286,7 @@ void main() {
     testWidgets('save failure on Not now → map + banner, no request',
         (tester) async {
       final store = FakeConsentStore()..failSave = true;
-      final permissions = FakeLocationPermissionService();
+      final permissions = FakeLocationService();
 
       await _launch(tester, store, permissions);
       await tester.tap(find.byKey(_notNow));
@@ -291,7 +294,7 @@ void main() {
 
       expect(find.byType(FlutterMap), findsOneWidget);
       expect(find.byKey(_banner), findsOneWidget);
-      expect(permissions.requestCalls, 0);
+      expect(permissions.totalCalls, 0); // BR-9: no location API at all
       expect(tester.takeException(), isNull);
     });
   });
@@ -309,7 +312,7 @@ void main() {
         _setSmallScreen(tester);
         final semantics = tester.ensureSemantics();
         final store = FakeConsentStore();
-        final permissions = FakeLocationPermissionService();
+        final permissions = FakeLocationService();
 
         await _launch(tester, store, permissions);
 
@@ -364,7 +367,7 @@ void main() {
       await _launch(
         tester,
         FakeConsentStore(),
-        FakeLocationPermissionService(),
+        FakeLocationService(),
       );
 
       expect(find.byType(ConsentScreen), findsOneWidget);
@@ -383,7 +386,7 @@ void main() {
       await _launch(
         tester,
         FakeConsentStore(),
-        FakeLocationPermissionService(),
+        FakeLocationService(),
       );
       expect(find.text(_vi.title), findsOneWidget);
     });
@@ -393,7 +396,7 @@ void main() {
       await _launch(
         tester,
         FakeConsentStore(),
-        FakeLocationPermissionService(),
+        FakeLocationService(),
       );
       expect(find.text(_en.title), findsOneWidget);
     });

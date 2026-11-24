@@ -128,11 +128,83 @@ abstract class AppLocalizations {
   /// **'Turn on location to see lots near you'**
   String get banner_location_needed;
 
-  /// SPEC-001 §6, US-1.1 AC3: banner action, reopens S1 after a decline.
+  /// SPEC-001 §6, US-1.1 AC3–AC5: banner action (reopens S1 after a decline, re-requests the permission, or opens settings / the Web unblock guide).
   ///
   /// In en, this message translates to:
   /// **'Enable'**
   String get btn_enable;
+
+  /// SPEC-001 §6, US-1.1 AC6: banner when device location services are off (Android).
+  ///
+  /// In en, this message translates to:
+  /// **'Location is off'**
+  String get banner_location_off;
+
+  /// SPEC-001 §6, US-1.1 AC6: opens the Android location settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get btn_turn_on;
+
+  /// SPEC-001 §6, US-1.1 AC5: Web unblock guide title.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is blocked'**
+  String get web_unblock_title;
+
+  /// SPEC-001 §6, US-1.1 AC5: Web unblock guide text.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is blocked for this site. Open your browser\'s site settings, allow Location, then reload the page.'**
+  String get web_unblock_guide;
+
+  /// SPEC-001 §6: closes the Web unblock guide.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get btn_ok;
+
+  /// SPEC-001 §6, US-1.1 AC9: hint while a last-known position is shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating…'**
+  String get hint_locating;
+
+  /// SPEC-001 §6, US-1.1 AC9: banner after the 10 s timeout without any position.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t get your location — adjust manually?'**
+  String get banner_no_fix;
+
+  /// SPEC-001 §6, US-1.1 AC9 / US-1.3 AC2: starts adjust mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get btn_adjust;
+
+  /// SPEC-001 §6, US-1.1 AC10: banner when the user is outside the service area.
+  ///
+  /// In en, this message translates to:
+  /// **'ParkFinder currently covers Vũng Tàu only'**
+  String get out_of_area;
+
+  /// SPEC-001 §6, US-1.1 AC10: moves the camera to the default centre.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Vũng Tàu'**
+  String get btn_go_vung_tau;
+
+  /// SPEC-001 §6, NFR-8: semantics label of a banner close (×) action.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get a11y_dismiss;
+
+  /// SPEC-001 §6, NFR-8, US-1.1 AC8: label of the "My location" button.
+  ///
+  /// In en, this message translates to:
+  /// **'My location'**
+  String get a11y_my_location;
 }
 
 class _AppLocalizationsDelegate
