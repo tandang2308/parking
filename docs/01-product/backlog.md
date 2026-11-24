@@ -1,6 +1,6 @@
 # Product Backlog
 
-> Source of truth for **content**; day-to-day status is tracked on the Jira board. Keep IDs identical in both.
+> Source of truth for **content**; day-to-day status is tracked on the [GitHub Projects board](https://github.com/users/tandang2308/projects/1) (replaces Jira — MTG-2026-11-24-planning). Keep IDs identical in both.
 > Estimates are initial (Fibonacci SP) — to be re-estimated by the team with Planning Poker.
 
 | Status values | `New` · `Ready` · `In Sprint` · `Done` · `Dropped` |
@@ -11,10 +11,10 @@
 ### E1 — Location & Map
 | ID | User story | SP | Status | Spec |
 |---|---|---|---|---|
-| US-1.1 | As a driver, I want to see my current position on a map, so that I can orient myself and find parking around me | 5 | New | SPEC-001 |
-| US-1.2 | As a driver, I want to see nearby parking lots as pins on the map, so that I can quickly pick the closest suitable one | 8 | New | SPEC-001 |
-| US-1.3 | As a driver, I want to adjust my position manually when GPS is inaccurate, so that nearby lots and distances are correct | 3 | New | SPEC-001 |
-| US-1.4 | As a driver, I want to be asked for consent before the app uses my location, so that my personal data is protected (PDPL) | 3 | New | SPEC-001 |
+| US-1.1 | As a driver, I want to see my current position on a map, so that I can orient myself and find parking around me _(Sprint 1, #19)_ | 5 | In Sprint | SPEC-001 |
+| US-1.2 | As a driver, I want to see nearby parking lots as pins on the map, so that I can quickly pick the closest suitable one _(Sprint 1, #20)_ | 8 | In Sprint | SPEC-001 |
+| US-1.3 | As a driver, I want to adjust my position manually when GPS is inaccurate, so that nearby lots and distances are correct _(Sprint 1 stretch, #21)_ | 3 | In Sprint | SPEC-001 |
+| US-1.4 | As a driver, I want to be asked for consent before the app uses my location, so that my personal data is protected (PDPL) _(Sprint 1, #18)_ | 3 | In Sprint | SPEC-001 |
 
 ### E2 — Search & Filter
 | ID | User story | SP | Status | Spec |
