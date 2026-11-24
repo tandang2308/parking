@@ -42,7 +42,7 @@ See ADRs: [ADR-0002](adr/ADR-0002-zero-cost-mvp-stack.md), [ADR-0003](adr/ADR-00
 | `lot_owners` | id, lot_id, owner_id, status (`pending` / `verified` / `rejected`), documents, reviewed_by, reviewed_at |
 | `lot_availability` | lot_id, status (`available` / `almost_full` / `full`), updated_at, updated_by |
 
-Key RPC: `nearby_lots(lat, lng, radius_m, vehicle_type)` → lots ordered by distance (PostGIS `ST_DWithin` + `ST_Distance`).
+Key RPC: `nearby_lots(lat, lng, radius_m, vehicle_type)` → max 50 lots ordered by distance (PostGIS `ST_DWithin` + `ST_Distance`); returns `lot_lat`/`lot_lng` (output names cannot repeat the input params). Full definition: [SPEC-001 §5](../02-specs/SPEC-001-location-and-map.md#5-data--api).
 
 ## 4. Security
 - App uses only the public `anon` key; **never** ship the service key.
