@@ -26,6 +26,8 @@ Built with Scrum (2-week sprints). The human **Product Owner approves** all scop
 
 ## AI agent team
 Role agents live in `.claude/agents/` (see `docs/05-process/ai-agents.md`, ADR-0008). Sub-agents never commit, push or touch the cloud; the main agent reviews their output first.
+Skills (slash commands) live in `.claude/skills/`: `/minutes`, `/new-adr`, `/deploy-db` (see `docs/05-process/skills.md`). Cloud DB deploys only via `/deploy-db`.
+People: PO = Tan Dang · Scrum Master = Khoi Dang.
 
 ## Safety
 - Never commit secrets (API keys, Supabase service key, tokens, `.env`). Only the Supabase `anon` key may be in the client.
