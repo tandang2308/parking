@@ -396,12 +396,22 @@ class _MapScreenState extends State<MapScreen>
               right: 84,
               bottom: 48,
               child: SafeArea(
-                child: LotMiniCard(
-                  key: ValueKey('lot-card-${selected.id}'),
-                  lot: selected,
-                  distanceMetres:
-                      haversineMetres(_currentPosition, selected.position),
-                  onTap: () => _openLot(selected),
+                // Wide screens (Web/tablet): keep the card compact so the
+                // distance stays next to the name.
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: LotMiniCard.maxWidth,
+                    ),
+                    child: LotMiniCard(
+                      key: ValueKey('lot-card-${selected.id}'),
+                      lot: selected,
+                      distanceMetres:
+                          haversineMetres(_currentPosition, selected.position),
+                      onTap: () => _openLot(selected),
+                    ),
+                  ),
                 ),
               ),
             ),

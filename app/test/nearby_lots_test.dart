@@ -8,6 +8,7 @@ import 'package:parkfinder/config/tile_config.dart';
 import 'package:parkfinder/features/consent/consent_record.dart';
 import 'package:parkfinder/features/lots/lot_pins_layer.dart';
 import 'package:parkfinder/features/lots/lot_placeholder_screen.dart';
+import 'package:parkfinder/features/lots/lot_card.dart';
 import 'package:parkfinder/features/lots/lots_geo.dart';
 import 'package:parkfinder/features/lots/parking_lot.dart';
 import 'package:parkfinder/features/map/map_constants.dart';
@@ -190,6 +191,25 @@ void main() {
     expect(ModalRoute.of(tester.element(find.byType(LotPlaceholderScreen)))!
         .settings
         .name, '/lot/q1');
+  });
+
+  testWidgets('AC8 wide screen (Web 1910 px): card stays compact, distance '
+      'next to the name', (tester) async {
+    tester.view.physicalSize = const Size(1910, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final lot = lotAt('w', 10.3470, 107.0740, name: 'Bãi đỗ xe');
+    final repo = FakeLotsRepository(lots: [lot]);
+    _setLocale(tester, const Locale('en'));
+    await _launch(tester, repo);
+
+    await tester.tap(find.byKey(_pin('w')));
+    await _settle(tester);
+    final card = tester.getRect(find.byKey(const ValueKey('lot-card-w')));
+    expect(card.width, lessThanOrEqualTo(LotMiniCard.maxWidth));
+    final distance =
+        tester.getRect(find.byKey(const ValueKey('lot-card-distance')));
+    expect(distance.right, lessThanOrEqualTo(card.right));
   });
 
   testWidgets('AC11 / TC-1.2.24 / TC-1.2.17 (BR-11): outside the area → '

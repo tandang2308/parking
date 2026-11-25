@@ -15,6 +15,10 @@ class LotMiniCard extends StatelessWidget {
     required this.onTap,
   });
 
+  /// Max card width on wide screens (Web/tablet), so the distance stays
+  /// next to the name.
+  static const double maxWidth = 480;
+
   final ParkingLot lot;
 
   /// From the user's current position (BR-11), not the search centre.
