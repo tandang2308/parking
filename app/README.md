@@ -46,11 +46,24 @@ body only, rounded to 4 decimals, BR-10). Connection settings are passed with `-
 If either value is missing the app still starts; every lot load then fails and the
 "Can't load parking lots" banner is shown. Never commit the values (no keys in code, `.env` or docs).
 
-PowerShell example (Web):
+**Recommended: a settings file outside the repo.** Long commands pasted into the terminal often break
+across lines and silently drop the `--dart-define`s (the console then logs
+`Supabase not configured`). Create `D:\Projects\parking-local\supabase.json` (any path **outside** the
+repo, so it can never be committed):
+```json
+{ "SUPABASE_URL": "https://<project-ref>.supabase.co", "SUPABASE_ANON_KEY": "<anon key>" }
+```
+Get the anon key in the Supabase dashboard → Project Settings → API Keys (`anon` / publishable key).
+Then run (PowerShell, Web):
+```powershell
+flutter run -d web-server --web-port 8080 --dart-define-from-file=D:\Projects\parking-local\supabase.json
+```
+Alternative without a file:
 ```powershell
 flutter run -d web-server --web-port 8080 "--dart-define=SUPABASE_URL=https://<project-ref>.supabase.co" "--dart-define=SUPABASE_ANON_KEY=<anon key>"
 ```
-The same `--dart-define` flags work for `flutter build web --release` and `flutter build apk`.
+The same flags (`--dart-define-from-file` or `--dart-define`) work for `flutter build web --release`
+and `flutter build apk`.
 
 Behaviour notes: lots load only on the BR-3 triggers (first position, "My location", "Search this
 area", Retry/Expand, and one automatic retry when the connection comes back — Web: browser `online`
