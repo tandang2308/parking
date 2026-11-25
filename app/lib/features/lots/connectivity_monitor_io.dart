@@ -1,41 +1,32 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/services.dart';
 
 import 'connectivity_monitor.dart';
 
-/// Android: a connectivity change event (`connectivity_plus`, BSD-3) from
-/// "none" to any network (SPEC-001 §3, US-1.2 AC5).
+/// Android: the app's own `EventChannel` (MainActivity.kt) backed by
+/// `ConnectivityManager.registerDefaultNetworkCallback`. It emits one event
+/// when a network becomes available after none (SPEC-001 §3, US-1.2 AC5).
 ConnectivityMonitor createPlatformConnectivityMonitor() =>
-    _ConnectivityPlusMonitor(Connectivity());
+    ChannelConnectivityMonitor();
 
-class _ConnectivityPlusMonitor implements ConnectivityMonitor {
-  _ConnectivityPlusMonitor(this._connectivity) {
-    _sub = _connectivity.onConnectivityChanged.listen(
-      _onChanged,
-      onError: (Object _) {},
-    );
-    _connectivity.checkConnectivity().then(
-      (r) => _online ??= _isOnline(r),
-      onError: (Object _) => null,
-    );
+class ChannelConnectivityMonitor implements ConnectivityMonitor {
+  ChannelConnectivityMonitor({EventChannel channel = defaultChannel}) {
+    _sub = channel.receiveBroadcastStream().listen(
+          (_) => _controller.add(null),
+          // No native side (e.g. a desktop dev run) or a platform error: no
+          // auto retry, manual Retry still works.
+          onError: (Object _) {},
+          cancelOnError: false,
+        );
   }
 
-  final Connectivity _connectivity;
+  /// Name shared with `MainActivity.kt`.
+  static const EventChannel defaultChannel =
+      EventChannel('vn.parkfinder/connectivity');
+
   final StreamController<void> _controller = StreamController<void>.broadcast();
-  StreamSubscription<List<ConnectivityResult>>? _sub;
-
-  /// `null` until the first state is known.
-  bool? _online;
-
-  static bool _isOnline(List<ConnectivityResult> results) =>
-      results.any((r) => r != ConnectivityResult.none);
-
-  void _onChanged(List<ConnectivityResult> results) {
-    final online = _isOnline(results);
-    if (_online == false && online) _controller.add(null);
-    _online = online;
-  }
+  StreamSubscription<dynamic>? _sub;
 
   @override
   Stream<void> get onReconnected => _controller.stream;

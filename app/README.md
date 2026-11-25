@@ -35,7 +35,7 @@ flutter run -d chrome --dart-define=TILE_RENDERER=raster \
 No API keys are needed for the default provider. Never put secrets in `--dart-define` values.
 
 ## Supabase / nearby lots (US-1.2, SPEC-001 §5)
-Lots come from the Supabase RPC `nearby_lots` (`POST /rest/v1/rpc/nearby_lots`, coordinates in the
+Lots come (via the pure-Dart `supabase` client, MIT — ADR-0012) from the Supabase RPC `nearby_lots` (`POST /rest/v1/rpc/nearby_lots`, coordinates in the
 body only, rounded to 4 decimals, BR-10). Connection settings are passed with `--dart-define`:
 
 | Key | Default | Meaning |
@@ -67,7 +67,7 @@ and `flutter build apk`.
 
 Behaviour notes: lots load only on the BR-3 triggers (first position, "My location", "Search this
 area", Retry/Expand, and one automatic retry when the connection comes back — Web: browser `online`
-event, Android: `connectivity_plus`). Pan/zoom never loads. Clustering (BR-4) is implemented in
+event, Android: own `EventChannel` `vn.parkfinder/connectivity` in `MainActivity.kt`, no plugin — ADR-0012). Pan/zoom never loads. Clustering (BR-4) is implemented in
 `lib/features/lots/lot_clustering.dart` (`flutter_map_marker_cluster` 8.2.2 requires
 `latlong2 ^0.9.1`, the app uses `^0.10.1`). Tapping the mini card opens `/lot/:id`, a placeholder
 until US-3.1. Debug/profile builds log `nearby_lots loaded count=… radius_m=… duration_ms=…`

@@ -6,6 +6,7 @@ import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:parkfinder/config/tile_config.dart';
 import 'package:parkfinder/features/consent/consent_record.dart';
+import 'package:parkfinder/features/location/location_service.dart';
 import 'package:parkfinder/features/lots/lot_pins_layer.dart';
 import 'package:parkfinder/features/lots/lot_placeholder_screen.dart';
 import 'package:parkfinder/features/lots/lot_card.dart';
@@ -200,8 +201,12 @@ void main() {
     addTearDown(tester.view.reset);
     final lot = lotAt('w', 10.3470, 107.0740, name: 'Bãi đỗ xe');
     final repo = FakeLotsRepository(lots: [lot]);
+    final service = FakeLocationService();
     _setLocale(tester, const Locale('en'));
-    await _launch(tester, repo);
+    // A GPS fix is needed for the distance (no position → hidden).
+    await _launch(tester, repo, service: service, consent: ConsentResult.granted);
+    service.emit(MockPoints.mp1);
+    await _settle(tester);
 
     await tester.tap(find.byKey(_pin('w')));
     await _settle(tester);
@@ -210,6 +215,78 @@ void main() {
     final distance =
         tester.getRect(find.byKey(const ValueKey('lot-card-distance')));
     expect(distance.right, lessThanOrEqualTo(card.right));
+  });
+
+  group('AC8 / BR-11: card distance hidden without a user position '
+      '(PO decision, PR #27)', () {
+    Future<void> tapLot(WidgetTester tester) async {
+      await tester.tap(find.byKey(_pin('n')));
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('lot-card-n')), findsOneWidget);
+    }
+
+    final lot = lotAt('n', 10.3470, 107.0740, name: 'Bãi Trước');
+    const distanceKey = ValueKey('lot-card-distance');
+
+    testWidgets('consent declined → name and types, no distance',
+        (tester) async {
+      _setLocale(tester, const Locale('en'));
+      await _launch(tester, FakeLotsRepository(lots: [lot]));
+      await tapLot(tester);
+      expect(find.text('Bãi Trước'), findsOneWidget);
+      expect(find.text(_en.types), findsOneWidget);
+      expect(find.byKey(distanceKey), findsNothing);
+      // Not even the distance from the default centre (≈ 110 m).
+      expect(find.text('110 m'), findsNothing);
+    });
+
+    for (final (name, service) in [
+      (
+        'permission denied',
+        FakeLocationService(checkResult: LocationPermissionStatus.denied),
+      ),
+      (
+        'permission blocked',
+        FakeLocationService(
+            checkResult: LocationPermissionStatus.deniedForever),
+      ),
+      ('GPS off', FakeLocationService(serviceEnabled: false)),
+    ]) {
+      testWidgets('$name → no distance', (tester) async {
+        await _launch(tester, FakeLotsRepository(lots: [lot]),
+            service: service, consent: ConsentResult.granted);
+        await tapLot(tester);
+        expect(find.byKey(distanceKey), findsNothing);
+      });
+    }
+
+    testWidgets('timeout without last-known → no distance', (tester) async {
+      final service = FakeLocationService(); // no fix, no last-known
+      await _launch(tester, FakeLotsRepository(lots: [lot]),
+          service: service, consent: ConsentResult.granted);
+      await tester.pump(const Duration(seconds: 11));
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('banner-no-fix')), findsOneWidget);
+      await tapLot(tester);
+      expect(find.byKey(distanceKey), findsNothing);
+    });
+
+    testWidgets('last-known position (Android) → distance shown',
+        (tester) async {
+      _setLocale(tester, const Locale('en'));
+      final service = FakeLocationService(
+        lastKnown: fixAt(10.3460, 107.0740,
+            at: testNow.subtract(const Duration(minutes: 1))),
+      );
+      await _launch(tester, FakeLotsRepository(lots: [lot]),
+          service: service, consent: ConsentResult.granted);
+      await tester.pump(const Duration(seconds: 11));
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('hint-locating')), findsOneWidget);
+      await tapLot(tester);
+      // 0.001° north of the last-known position ≈ 111 m → "110 m".
+      expect(tester.widget<Text>(find.byKey(distanceKey)).data, '110 m');
+    });
   });
 
   testWidgets('AC11 / TC-1.2.24 / TC-1.2.17 (BR-11): outside the area → '

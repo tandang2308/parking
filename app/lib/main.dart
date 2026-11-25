@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 
 import 'config/supabase_config.dart';
 import 'config/tile_config.dart';
@@ -35,8 +35,9 @@ void main() {
 /// are defined; otherwise the app still starts and lot loading shows the
 /// error banner (AC5).
 ///
-/// A plain [SupabaseClient] is used (no `Supabase.initialize`): the app has
-/// no sign-in, so no session storage or deep-link handling is needed.
+/// Uses the pure-Dart `supabase` package (MIT; no Flutter plugins, so no
+/// non-permissive platform dependencies). The app has no sign-in yet, so
+/// no session storage or deep-link handling is needed.
 LotsRepository createLotsRepository(SupabaseConfig config) {
   if (!config.isConfigured) {
     debugPrint('Supabase not configured: lots cannot be loaded.');

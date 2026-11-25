@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:latlong2/latlong.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 
 import 'lots_repository.dart';
 import 'parking_lot.dart';

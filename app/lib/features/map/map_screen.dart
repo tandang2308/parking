@@ -256,10 +256,12 @@ class _MapScreenState extends State<MapScreen>
   MapBannerKind? get _bannerKind =>
       _lots.hasError ? MapBannerKind.loadError : _location.banner;
 
-  /// BR-11 / BR-8: current position (GPS or last-known; default centre when
-  /// there is none). TODO(US-1.3): a manual position takes precedence.
-  LatLng get _currentPosition =>
-      _location.userFix?.position ?? MapConstants.defaultCentre;
+  /// BR-11: the user's position (GPS fix or last-known), or `null` when
+  /// there is none (declined, denied/blocked, GPS off, timeout without
+  /// last-known). The default centre is never a distance source (PO
+  /// decision on PR #27): the card then hides the distance.
+  /// TODO(US-1.3): a manual position takes precedence.
+  LatLng? get _userPosition => _location.userFix?.position;
 
   @override
   Widget build(BuildContext context) {
@@ -407,8 +409,11 @@ class _MapScreenState extends State<MapScreen>
                     child: LotMiniCard(
                       key: ValueKey('lot-card-${selected.id}'),
                       lot: selected,
-                      distanceMetres:
-                          haversineMetres(_currentPosition, selected.position),
+                      distanceMetres: switch (_userPosition) {
+                        final LatLng user =>
+                          haversineMetres(user, selected.position),
+                        null => null,
+                      },
                       onTap: () => _openLot(selected),
                     ),
                   ),

@@ -7,7 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:parkfinder/features/lots/lots_repository.dart';
 import 'package:parkfinder/features/lots/parking_lot.dart';
 import 'package:parkfinder/features/lots/supabase_lots_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 
 /// SPEC-001 §5 RPC contract, BR-10 (TC-1.2.9 automated part): POST body
 /// only, 4-decimal rounding, nothing in the URL. No real network.

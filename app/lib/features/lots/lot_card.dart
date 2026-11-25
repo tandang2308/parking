@@ -6,13 +6,14 @@ import 'lots_geo.dart';
 import 'parking_lot.dart';
 
 /// Mini card of the selected lot (SPEC-001 US-1.2 AC8): name, vehicle
-/// types and the BR-11 distance formatted per BR-15. Tap → `/lot/:id`.
+/// types and, when the user's position is known, the BR-11 distance
+/// formatted per BR-15. Tap → `/lot/:id`.
 class LotMiniCard extends StatelessWidget {
   const LotMiniCard({
     super.key,
     required this.lot,
-    required this.distanceMetres,
     required this.onTap,
+    this.distanceMetres,
   });
 
   /// Max card width on wide screens (Web/tablet), so the distance stays
@@ -22,7 +23,8 @@ class LotMiniCard extends StatelessWidget {
   final ParkingLot lot;
 
   /// From the user's current position (BR-11), not the search centre.
-  final double distanceMetres;
+  /// `null` when there is no user position: the distance is hidden.
+  final double? distanceMetres;
   final VoidCallback onTap;
 
   @override
@@ -30,7 +32,8 @@ class LotMiniCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final types = vehicleTypesLabel(lot, l10n);
-    final distance = formatDistance(distanceMetres, l10n);
+    final metres = distanceMetres;
+    final distance = metres == null ? null : formatDistance(metres, l10n);
 
     return Material(
       elevation: 4,
@@ -79,12 +82,14 @@ class LotMiniCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  distance,
-                  key: const ValueKey('lot-card-distance'),
-                  style: theme.textTheme.labelLarge,
-                ),
+                if (distance != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    distance,
+                    key: const ValueKey('lot-card-distance'),
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ],
                 const ExcludeSemantics(child: Icon(Icons.chevron_right)),
               ],
             ),
