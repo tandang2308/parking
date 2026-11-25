@@ -3,7 +3,7 @@
 Only blockers, decisions and risks are recorded here (`docs/05-process/scrum.md`). Status lives on the board (GitHub Projects, ADR-0011).
 
 ## 2026-11-25 (Day 1)
-Board: #18 US-1.4 Done · #19 US-1.1 Done (PR #26) · #20 US-1.2 In Review (PR #27) · #16, #17, #21 Todo. 8 / 16 SP done.
+Board: #18 US-1.4 Done · #19 US-1.1 Done (PR #26) · #20 US-1.2 In Progress, PR #27 awaiting review · #16, #17, #21 Todo. 8 / 16 SP done.
 
 | # | Type | Item | Owner | Ref |
 |---|---|---|---|---|
