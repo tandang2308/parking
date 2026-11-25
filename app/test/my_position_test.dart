@@ -87,6 +87,7 @@ Future<void> _launch(
       consentStore:
           store ?? FakeConsentStore(consent == null ? null : consentRecord(consent)),
       locationService: service,
+      lotsRepository: FakeLotsRepository(),
       clock: () => testNow,
       onSearchCentreChanged: (point, trigger) =>
           _searches.add((point: point, trigger: trigger)),

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/supabase_config.dart';
 import 'config/tile_config.dart';
 import 'features/consent/consent_gate.dart';
 import 'features/consent/consent_record.dart';
 import 'features/consent/consent_store.dart';
 import 'features/location/location_controller.dart';
 import 'features/location/location_service.dart';
+import 'features/lots/connectivity_monitor.dart';
+import 'features/lots/lot_placeholder_screen.dart';
+import 'features/lots/lots_repository.dart';
+import 'features/lots/parking_lot.dart';
+import 'features/lots/supabase_lots_repository.dart';
 import 'features/map/base_tile_layer.dart';
 import 'features/map/map_screen.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -18,6 +25,28 @@ void main() {
       tileConfig: TileConfig.fromEnvironment(),
       consentStore: SharedPrefsConsentStore(),
       locationService: PlatformLocationService(),
+      lotsRepository: createLotsRepository(SupabaseConfig.fromEnvironment()),
+      connectivity: createPlatformConnectivityMonitor(),
+    ),
+  );
+}
+
+/// US-1.2: Supabase `nearby_lots` when `SUPABASE_URL` / `SUPABASE_ANON_KEY`
+/// are defined; otherwise the app still starts and lot loading shows the
+/// error banner (AC5).
+///
+/// A plain [SupabaseClient] is used (no `Supabase.initialize`): the app has
+/// no sign-in, so no session storage or deep-link handling is needed.
+LotsRepository createLotsRepository(SupabaseConfig config) {
+  if (!config.isConfigured) {
+    debugPrint('Supabase not configured: lots cannot be loaded.');
+    return const UnconfiguredLotsRepository();
+  }
+  return SupabaseLotsRepository(
+    SupabaseClient(
+      config.normalizedUrl,
+      config.anonKey,
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
     ),
   );
 }
@@ -32,6 +61,8 @@ class ParkFinderApp extends StatefulWidget {
     required this.tileConfig,
     required this.consentStore,
     required this.locationService,
+    required this.lotsRepository,
+    this.connectivity,
     this.styleLoader = loadStyleFromNetwork,
     this.consentVersion = kConsentVersion,
     this.onSearchCentreChanged,
@@ -45,7 +76,13 @@ class ParkFinderApp extends StatefulWidget {
   final StyleLoader styleLoader;
   final int consentVersion;
 
-  /// BR-3 search hook (US-1.1 AC8). TODO(US-1.2): load `nearby_lots` here.
+  /// `nearby_lots` source (US-1.2).
+  final LotsRepository lotsRepository;
+
+  /// Offline → online events for the single auto retry (US-1.2 AC5).
+  final ConnectivityMonitor? connectivity;
+
+  /// Observer of the BR-3 search triggers (US-1.1 AC8; used by tests).
   final SearchCentreCallback? onSearchCentreChanged;
 
   /// Injectable for tests (AC9 timeout, last-known age).
@@ -59,6 +96,20 @@ class ParkFinderApp extends StatefulWidget {
 class _ParkFinderAppState extends State<ParkFinderApp> {
   /// Session-scoped map state (e.g. dismissed banners), until app restart.
   final MapSession _session = MapSession();
+
+  /// US-1.2 AC8: `/lot/:id` (placeholder until US-3.1).
+  Route<void>? _onGenerateRoute(RouteSettings settings) {
+    final id = LotPlaceholderScreen.idFromRoute(settings.name);
+    if (id == null) return null;
+    final args = settings.arguments;
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (_) => LotPlaceholderScreen(
+        lotId: id,
+        lot: args is ParkingLot && args.id == id ? args : null,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +129,7 @@ class _ParkFinderAppState extends State<ParkFinderApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      onGenerateRoute: _onGenerateRoute,
       home: ConsentGate(
         store: widget.consentStore,
         consentVersion: widget.consentVersion,
@@ -86,6 +138,8 @@ class _ParkFinderAppState extends State<ParkFinderApp> {
           tileConfig: widget.tileConfig,
           styleLoader: widget.styleLoader,
           session: _session,
+          lotsRepository: widget.lotsRepository,
+          connectivity: widget.connectivity,
           // BR-9 / D3: the map gets no location service without consent.
           locationService: access.allowed ? widget.locationService : null,
           requestPermissionOnStart: access.requestPermission,

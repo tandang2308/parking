@@ -205,6 +205,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My location'**
   String get a11y_my_location;
+
+  /// SPEC-001 §6, US-1.2 AC6: chip that loads lots around the map centre.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this area'**
+  String get btn_search_area;
+
+  /// SPEC-001 §6, US-1.2 AC4: empty state of a position-based search at 1 km.
+  ///
+  /// In en, this message translates to:
+  /// **'No parking lots within {km} km'**
+  String empty_radius(int km);
+
+  /// SPEC-001 §6, US-1.2 AC4: repeats the current search at 3 km.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand to {km} km'**
+  String btn_expand(int km);
+
+  /// SPEC-001 §6, US-1.2 AC4: still empty after expanding.
+  ///
+  /// In en, this message translates to:
+  /// **'No parking lots found nearby yet'**
+  String get empty_none;
+
+  /// SPEC-001 §6, US-1.2 AC4: "Search this area" returned 0 lots.
+  ///
+  /// In en, this message translates to:
+  /// **'No parking lots in this area'**
+  String get empty_area;
+
+  /// SPEC-001 §6, US-1.2 AC5: error/offline banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t load parking lots'**
+  String get error_load;
+
+  /// SPEC-001 §6, US-1.2 AC5: repeats the last request.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get btn_retry;
+
+  /// SPEC-001 §6, US-1.2 AC9 ({n} = 50).
+  ///
+  /// In en, this message translates to:
+  /// **'Showing nearest {n} — zoom in to see more'**
+  String hint_cap(int n);
+
+  /// SPEC-001 §6, BR-15: distance below 1000 m (rounded to 10 m).
+  ///
+  /// In en, this message translates to:
+  /// **'{m} m'**
+  String distance_m(int m);
+
+  /// SPEC-001 §6, BR-15: distance in km, one decimal, already formatted with the locale decimal separator.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String distance_km(String km);
+
+  /// SPEC-001 §6, US-1.2 AC8 card.
+  ///
+  /// In en, this message translates to:
+  /// **'Motorbike'**
+  String get vehicle_motorbike;
+
+  /// SPEC-001 §6, US-1.2 AC8 card.
+  ///
+  /// In en, this message translates to:
+  /// **'Car'**
+  String get vehicle_car;
+
+  /// SPEC-001 §6, NFR-8: lot pin semantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {types}'**
+  String a11y_pin(String name, String types);
+
+  /// SPEC-001 §6, NFR-8: cluster semantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} parking lots'**
+  String a11y_cluster(int count);
 }
 
 class _AppLocalizationsDelegate

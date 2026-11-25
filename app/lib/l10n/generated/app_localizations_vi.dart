@@ -63,4 +63,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get a11y_my_location => 'Vị trí của tôi';
+
+  @override
+  String get btn_search_area => 'Tìm trong khu vực này';
+
+  @override
+  String empty_radius(int km) {
+    return 'Không có bãi xe trong bán kính $km km';
+  }
+
+  @override
+  String btn_expand(int km) {
+    return 'Mở rộng đến $km km';
+  }
+
+  @override
+  String get empty_none => 'Chưa tìm thấy bãi xe nào gần đây';
+
+  @override
+  String get empty_area => 'Không có bãi xe trong khu vực này';
+
+  @override
+  String get error_load => 'Không tải được bãi xe';
+
+  @override
+  String get btn_retry => 'Thử lại';
+
+  @override
+  String hint_cap(int n) {
+    return 'Đang hiển thị $n bãi gần nhất — phóng to để xem thêm';
+  }
+
+  @override
+  String distance_m(int m) {
+    return '$m m';
+  }
+
+  @override
+  String distance_km(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get vehicle_motorbike => 'Xe máy';
+
+  @override
+  String get vehicle_car => 'Ô tô';
+
+  @override
+  String a11y_pin(String name, String types) {
+    return '$name, $types';
+  }
+
+  @override
+  String a11y_cluster(int count) {
+    return '$count bãi xe';
+  }
 }
