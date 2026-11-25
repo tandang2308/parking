@@ -1,37 +1,61 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import '../location/location_permission_service.dart';
 import 'consent_record.dart';
 import 'consent_screen.dart';
 import 'consent_store.dart';
 
-/// Builds the map screen; [onEnableLocation] is non-null when the
-/// `banner_location_needed` banner must be shown (consent declined).
+/// What the map may do with location, decided by the consent gate.
+@immutable
+class LocationAccess {
+  const LocationAccess._({
+    required this.allowed,
+    required this.requestPermission,
+    this.onReopenConsent,
+  });
+
+  /// Consent declined: no location API at all; "Enable" reopens S1.
+  const LocationAccess.declined({required VoidCallback onReopenConsent})
+      : this._(
+          allowed: false,
+          requestPermission: false,
+          onReopenConsent: onReopenConsent,
+        );
+
+  /// Consent granted (BR-9). [requestPermission] is true right after
+  /// "Allow" (US-1.4 AC3: show the OS/browser prompt now); on relaunch the
+  /// permission is only checked (no prompt).
+  const LocationAccess.granted({required bool requestPermission})
+      : this._(allowed: true, requestPermission: requestPermission);
+
+  /// Whether any location API may be called ([isLocationUseAllowed]).
+  final bool allowed;
+  final bool requestPermission;
+  final VoidCallback? onReopenConsent;
+}
+
+/// Builds the map screen for the given [access].
 typedef ConsentMapBuilder = Widget Function(
   BuildContext context,
-  VoidCallback? onEnableLocation,
+  LocationAccess access,
 );
 
 /// Shows S1 before the map when consent is needed (SPEC-001 US-1.4).
 ///
-/// Guarantees BR-9: [LocationPermissionService] is called only from the
-/// "Allow" action — never on launch, never when consent is declined (D3 of
+/// Guarantees BR-9: location is allowed only for a current-version
+/// `granted` answer ([isLocationUseAllowed]) — never on first launch before
+/// "Allow", never when consent is declined (D3 of
 /// MTG-2026-11-24-po-decisions-2), even if the OS permission was granted
 /// earlier.
 class ConsentGate extends StatefulWidget {
   const ConsentGate({
     super.key,
     required this.store,
-    required this.permissionService,
     required this.mapBuilder,
     this.consentVersion = kConsentVersion,
     this.clock = DateTime.now,
   });
 
   final ConsentStore store;
-  final LocationPermissionService permissionService;
   final ConsentMapBuilder mapBuilder;
   final int consentVersion;
   final DateTime Function() clock;
@@ -44,7 +68,12 @@ enum _Phase { loading, consent, map }
 
 class _ConsentGateState extends State<ConsentGate> {
   _Phase _phase = _Phase.loading;
-  bool _declined = false;
+
+  /// The answer in effect for this session (also when saving failed, D4).
+  ConsentRecord? _record;
+
+  /// True when the map was opened by "Allow" in this session.
+  bool _justAllowed = false;
   bool _answering = false;
 
   @override
@@ -62,63 +91,61 @@ class _ConsentGateState extends State<ConsentGate> {
     }
     if (!mounted) return;
     setState(() {
-      if (isConsentRequired(record, widget.consentVersion)) {
-        _phase = _Phase.consent; // AC1, AC6, AC7
-      } else {
-        _phase = _Phase.map; // AC5: no nagging
-        _declined = record!.result == ConsentResult.declined;
-      }
+      _record = record;
+      // AC1, AC6, AC7: S1 first; AC5: no nagging.
+      _phase = isConsentRequired(record, widget.consentVersion)
+          ? _Phase.consent
+          : _Phase.map;
     });
   }
 
-  Future<void> _save(ConsentResult result) async {
+  Future<ConsentRecord> _save(ConsentResult result) async {
+    final record = ConsentRecord(
+      result: result,
+      version: widget.consentVersion,
+      timestamp: widget.clock().toUtc(),
+    );
     try {
-      await widget.store.save(
-        ConsentRecord(
-          result: result,
-          version: widget.consentVersion,
-          timestamp: widget.clock().toUtc(),
-        ),
-      );
+      await widget.store.save(record);
     } catch (_) {
       // Storage unavailable: the answer applies to this session only and S1
       // is shown again next launch (D4). Never block the app.
       debugPrint('Consent storage unavailable on save');
     }
+    return record;
   }
 
-  /// AC3: store `granted`, then request the OS/browser permission.
+  /// AC3: store `granted`; the map then requests the OS/browser permission
+  /// and handles the result (US-1.1 AC2/AC4/AC5).
   Future<void> _onAllow() async {
     if (_answering) return;
     _answering = true;
-    await _save(ConsentResult.granted);
+    final record = await _save(ConsentResult.granted);
     if (!mounted) return;
     setState(() {
+      _record = record;
+      _justAllowed = true;
       _phase = _Phase.map;
-      _declined = false;
       _answering = false;
     });
-    // The map is shown right away so the app is never blocked by a pending
-    // browser prompt; the OS/browser prompt appears on top of it. The result
-    // (denied / blocked / granted) is handled by US-1.1 AC2/AC4/AC5.
-    unawaited(widget.permissionService.requestPermission());
   }
 
   /// AC4: store `declined`, no OS/browser prompt, open the map with banner.
   Future<void> _onNotNow() async {
     if (_answering) return;
     _answering = true;
-    await _save(ConsentResult.declined);
+    final record = await _save(ConsentResult.declined);
     if (!mounted) return;
     setState(() {
+      _record = record;
+      _justAllowed = false;
       _phase = _Phase.map;
-      _declined = true;
       _answering = false;
     });
   }
 
   /// US-1.1 AC3 / TC-1.4.3 step 4: "Enable" after a decline reopens S1.
-  void _onEnable() => setState(() => _phase = _Phase.consent);
+  void _onReopenConsent() => setState(() => _phase = _Phase.consent);
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +157,10 @@ class _ConsentGateState extends State<ConsentGate> {
       case _Phase.consent:
         return ConsentScreen(onAllow: _onAllow, onNotNow: _onNotNow);
       case _Phase.map:
-        return widget.mapBuilder(context, _declined ? _onEnable : null);
+        final access = isLocationUseAllowed(_record, widget.consentVersion)
+            ? LocationAccess.granted(requestPermission: _justAllowed)
+            : LocationAccess.declined(onReopenConsent: _onReopenConsent);
+        return widget.mapBuilder(context, access);
     }
   }
 }

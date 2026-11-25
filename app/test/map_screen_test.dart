@@ -43,7 +43,7 @@ Future<void> _pumpApp(
       tileConfig: tileConfig,
       styleLoader: styleLoader,
       consentStore: FakeConsentStore(consentRecord(ConsentResult.granted)),
-      permissionService: FakeLocationPermissionService(),
+      locationService: FakeLocationService(),
     ),
   );
   await tester.pump(); // consent record loaded
