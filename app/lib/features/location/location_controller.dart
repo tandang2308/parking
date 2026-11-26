@@ -383,11 +383,27 @@ class LocationController extends ChangeNotifier {
     if (error is LocationPermissionDeniedError) {
       _enterNoLocation(LocationStatus.needed); // AC4 / US-1.4 AC8
     } else if (error is LocationServiceDisabledError) {
-      _enterNoLocation(LocationStatus.serviceOff); // AC6
+      unawaited(_onServiceDisabledError());
     } else {
       // Position unavailable / timeout (e.g. Web GPS off): AC9 timer
       // handles it. No coordinates in this log.
       debugPrint('Location stream error: ${error.runtimeType}');
+    }
+  }
+
+  /// The stream reports "location services disabled". On Android this is
+  /// also raised when the user declines Google Play services' "Location
+  /// Accuracy" dialog while device location is ON (issue #31). Only the
+  /// real service state decides AC6; a declined accuracy dialog is treated
+  /// as "no fix yet", so the AC9 timeout (last-known / `banner_no_fix`)
+  /// takes over.
+  Future<void> _onServiceDisabledError() async {
+    final enabled = await _service!.isLocationServiceEnabled();
+    if (_disposed) return;
+    if (!enabled) {
+      _enterNoLocation(LocationStatus.serviceOff); // AC6
+    } else {
+      debugPrint('Location stream: settings check declined, services on');
     }
   }
 

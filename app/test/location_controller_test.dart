@@ -231,6 +231,50 @@ void main() {
       expect(h.controller.banner, isNull);
     });
 
+    test('Android relaunch while blocked (stored flag → check reports '
+        'deniedForever): first Enable tap opens app settings (issue #32)',
+        () async {
+      final h = _Harness(
+        service: FakeLocationService(
+          checkResult: LocationPermissionStatus.deniedForever,
+          requestResult: LocationPermissionStatus.deniedForever,
+        ),
+      );
+      await h.start(request: false);
+      expect(h.controller.status, LocationStatus.blocked);
+      expect(h.controller.banner, MapBannerKind.locationNeeded);
+
+      await h.controller.onEnable();
+      expect(h.service.requestCalls, 0); // no silent request first
+      expect(h.service.openAppSettingsCalls, 1); // first tap
+
+      await h.background();
+      h.service.checkResult = LocationPermissionStatus.granted;
+      await h.foreground();
+      expect(h.service.isStreaming, isTrue);
+    });
+
+    test('Android 2nd denial in the OS dialog: no jump to settings; next '
+        'tap opens them (AC4 → AC5)', () async {
+      final h = _Harness(
+        service: FakeLocationService(
+          requestResult: LocationPermissionStatus.denied,
+        ),
+      );
+      await h.start();
+      expect(h.controller.status, LocationStatus.needed);
+
+      h.service.requestResult = LocationPermissionStatus.deniedForever;
+      await h.controller.onEnable(); // dialog shown, user denies again
+      expect(h.service.requestCalls, 2);
+      expect(h.service.openAppSettingsCalls, 0);
+      expect(h.controller.status, LocationStatus.blocked);
+
+      await h.controller.onEnable();
+      expect(h.service.requestCalls, 2);
+      expect(h.service.openAppSettingsCalls, 1);
+    });
+
     test('Web: blocked after Allow shows the banner (no guide yet); Enable '
         'calls the Geolocation API once and shows the guide', () async {
       final h = _Harness(
@@ -339,9 +383,40 @@ void main() {
     test('stream reports location disabled → banner', () async {
       final h = _Harness();
       await h.start();
+      h.service.serviceEnabled = false;
       h.service.emitError(const LocationServiceDisabledError());
       await flush();
       expect(h.controller.banner, MapBannerKind.locationOff);
+    });
+
+    test('declined Google "Location Accuracy" dialog with location ON: no '
+        '"Location is off"; AC9 timeout applies (issue #31)', () async {
+      final h = _Harness(
+        service: FakeLocationService(lastKnown: MockPoints.mp1),
+      );
+      await h.start();
+      expect(h.controller.status, LocationStatus.locating);
+
+      // geolocator_android reports the declined dialog as "disabled".
+      h.service.emitError(const LocationServiceDisabledError());
+      await flush();
+      expect(h.controller.status, LocationStatus.locating);
+      expect(h.controller.banner, isNull);
+      expect(h.service.openLocationSettingsCalls, 0);
+
+      await h.fireTimeout();
+      expect(h.controller.status, LocationStatus.lastKnown);
+      expect(h.controller.banner, isNull);
+    });
+
+    test('declined accuracy dialog, no last-known → banner_no_fix, not '
+        'location off (issue #31)', () async {
+      final h = _Harness();
+      await h.start();
+      h.service.emitError(const LocationServiceDisabledError());
+      await flush();
+      await h.fireTimeout();
+      expect(h.controller.banner, MapBannerKind.noFix);
     });
 
     test('Web: no service check, no Turn on; handled as timeout', () async {
