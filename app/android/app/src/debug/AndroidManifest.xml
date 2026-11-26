@@ -4,4 +4,8 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Debug builds only (#33, ADR-0013): allow plain http so QA can point the
+         app at the LOCAL Supabase stack (http://127.0.0.1:55321 via `adb reverse`).
+         Release/profile builds keep Android's default (https only). -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

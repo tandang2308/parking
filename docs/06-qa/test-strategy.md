@@ -40,3 +40,11 @@ Mock GPS points `MP-n` are defined in SPEC-001 §8. **Entry criterion:** each po
 | MP-5 | Offshore east of Bãi Sau | Empty within 1 km, lots within 3 km |
 | MP-6 | HCMC District 1 | Outside service area |
 | MP-7 | North-west corner of service area (10.4400, 107.0400) | Inside area, 0 lots within 3 km |
+
+## Test data: local QA build (#33)
+The cloud database holds only real lots; the QA seed (`supabase/seed.sql`: ≥ 60 lots at MP-2, motorbike/car mix, identical-coordinate pair) exists **only locally** and must never be loaded into the cloud. Cases that need it (e.g. TC-1.2.6, .16, .21 `hint_cap`, .30) run against a **debug** build pointed at the local Supabase:
+1. Start Docker Desktop, then `npx supabase start` (from the repo root). Check: `nearby_lots(10.3440, 107.0960, 1000)` returns 50 rows.
+2. Settings file **outside the repo**, e.g. `D:\Projects\parking-local\supabase.local.json`: `{ "SUPABASE_URL": "http://127.0.0.1:55321", "SUPABASE_ANON_KEY": "<local anon key from npx supabase status>" }` (the local demo key, not the cloud key).
+3. Android emulator: `adb reverse tcp:55321 tcp:55321` (after every emulator start), then `flutter build apk --debug --dart-define-from-file=D:\Projects\parking-local\supabase.local.json` and `adb install -r build\app\outputs\flutter-apk\app-debug.apk`. Plain `http` is allowed in **debug builds only** (`app/android/app/src/debug/AndroidManifest.xml`).
+4. Web: `flutter run -d web-server --web-port 8080 --dart-define-from-file=D:\Projects\parking-local\supabase.local.json`.
+The test run report states which backend was used ("cloud" or "local seed").
