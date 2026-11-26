@@ -86,7 +86,8 @@ class MapBanner extends StatelessWidget {
   }
 }
 
-/// Builds the banner for [kind] wired to [controller] (US-1.1 AC3–AC10), or
+/// Builds the banner for [kind] wired to [controller] (US-1.1 AC3–AC10,
+/// US-1.3 AC1), or
 /// to [onRetry] for `error_load` (US-1.2 AC5).
 Widget buildLocationBanner(
   BuildContext context,
@@ -141,6 +142,17 @@ Widget buildLocationBanner(
         actionLabel: l10n.btn_go_vung_tau,
         onAction: controller.onGoToVungTau,
         onDismiss: controller.onDismissOutOfArea,
+      );
+    case MapBannerKind.lowAccuracy:
+      // US-1.3 AC1: "Adjust" starts adjust mode; × hides it for the session.
+      return MapBanner(
+        key: const ValueKey('banner-low-accuracy'),
+        icon: Icons.gps_not_fixed,
+        text: l10n.banner_low_accuracy,
+        actionKey: const ValueKey('banner-adjust'),
+        actionLabel: l10n.btn_adjust,
+        onAction: controller.onAdjust,
+        onDismiss: controller.onDismissLowAccuracy,
       );
   }
 }

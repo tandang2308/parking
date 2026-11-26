@@ -3,7 +3,7 @@
 Flutter client for ParkFinder Vũng Tàu. Current state: app skeleton + map tile spike
 (ADR-0009 validation gate, see `docs/03-architecture/spikes/ADR-0009-tile-spike.md`) +
 location consent screen S1 and vi/en localisation (US-1.4) + my position on the map (US-1.1) +
-nearby parking lots as pins (US-1.2).
+nearby parking lots as pins (US-1.2) + adjust my position manually (US-1.3).
 
 Requires Flutter 3.38.x stable. All commands run from this `app/` folder.
 
@@ -66,12 +66,21 @@ The same flags (`--dart-define-from-file` or `--dart-define`) work for `flutter 
 and `flutter build apk`.
 
 Behaviour notes: lots load only on the BR-3 triggers (first position, "My location", "Search this
-area", Retry/Expand, and one automatic retry when the connection comes back — Web: browser `online`
+area", confirming a manual position, Retry/Expand, and one automatic retry when the connection comes back — Web: browser `online`
 event, Android: own `EventChannel` `vn.parkfinder/connectivity` in `MainActivity.kt`, no plugin — ADR-0012). Pan/zoom never loads. Clustering (BR-4) is implemented in
 `lib/features/lots/lot_clustering.dart` (`flutter_map_marker_cluster` 8.2.2 requires
 `latlong2 ^0.9.1`, the app uses `^0.10.1`). Tapping the mini card opens `/lot/:id`, a placeholder
 until US-3.1. Debug/profile builds log `nearby_lots loaded count=… radius_m=… duration_ms=…`
 (NFR-1 timer, never coordinates).
+
+## Manual position (US-1.3, SPEC-001)
+Adjust mode starts from "Adjust" on the low-accuracy (accuracy > 100 m or Android "approximate"
+permission) or no-fix banner, from the ⋮ menu → "Set my position", or by long-pressing the map
+(Web: hold the mouse button). Move the map under the centre pin and tap "Confirm"; lots reload
+around that point (1 km) and card distances use it. "My location" switches back to GPS when the
+permission is granted and location is on. The manual position lives in memory only: restart /
+reload clears it; it is sent only as `nearby_lots` parameters (BR-10). Code:
+`lib/features/map/adjust_mode.dart`, `LocationController` (`startAdjust` / `confirmAdjust`).
 
 ## Location consent (US-1.4, SPEC-001)
 The consent screen S1 is shown before the map on first launch. The answer (`granted` /

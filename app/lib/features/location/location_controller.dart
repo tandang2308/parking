@@ -40,7 +40,16 @@ enum LocationStatus {
 ///
 /// [loadError] (US-1.2 AC5, `error_load` + Retry) has the top priority; it
 /// comes from the lots controller, never from [LocationController.banner].
-enum MapBannerKind { loadError, locationNeeded, locationOff, noFix, outOfArea }
+enum MapBannerKind {
+  loadError,
+  locationNeeded,
+  locationOff,
+  noFix,
+  outOfArea,
+
+  /// US-1.3 AC1: `banner_low_accuracy` + "Adjust" + × (lowest priority).
+  lowAccuracy,
+}
 
 /// BR-3 refresh triggers raised by US-1.1 (US-1.2 loads the lots).
 enum SearchTrigger {
@@ -49,9 +58,13 @@ enum SearchTrigger {
 
   /// BR-3 (b): "My location".
   myLocation,
+
+  /// BR-3 (c): confirming a manual position (US-1.3 AC3).
+  manualPosition,
 }
 
-/// Search-centre hook (US-1.1 AC8 → US-1.2). [point] already follows BR-14.
+/// Search-centre hook (US-1.1 AC8, US-1.3 AC3 → US-1.2). [point] already
+/// follows BR-14.
 typedef SearchCentreCallback = void Function(
   LatLng point,
   SearchTrigger trigger,
@@ -66,9 +79,14 @@ typedef TimerFactory = Timer Function(Duration duration, void Function() cb);
 class MapSession {
   /// US-1.1 AC10: out-of-area banner closed (×) for the rest of the session.
   bool outOfAreaDismissed = false;
+
+  /// US-1.3 AC1 (D6): low-accuracy banner closed (×) for the rest of the
+  /// session, even on new low-accuracy fixes.
+  bool lowAccuracyDismissed = false;
 }
 
-/// Location state machine of the map screen (SPEC-001 US-1.1 AC2–AC12).
+/// Location state machine of the map screen (SPEC-001 US-1.1 AC2–AC12) and
+/// the manual position / adjust mode (US-1.3).
 ///
 /// Pure logic: UI callbacks ([moveCamera], [onShowUnblockGuide], …) are
 /// injected; the clock and timers are injectable for tests.
@@ -80,7 +98,7 @@ class LocationController extends ChangeNotifier {
     this.onSearchCentreChanged,
     this.onReopenConsent,
     this.onShowUnblockGuide,
-    this.onAdjustRequested,
+    this.onUsingGps,
     DateTime Function()? clock,
     TimerFactory? timerFactory,
   })  : _service = service,
@@ -102,9 +120,9 @@ class LocationController extends ChangeNotifier {
   /// Web: show `web_unblock_title` / `web_unblock_guide` (AC5).
   final VoidCallback? onShowUnblockGuide;
 
-  /// "Adjust" on `banner_no_fix` (AC9). TODO(US-1.3): start adjust mode
-  /// (US-1.3 AC2); until then this hook is a no-op.
-  final VoidCallback? onAdjustRequested;
+  /// US-1.3 AC4: "My location" switched back from the manual position to
+  /// GPS (toast `toast_using_gps`).
+  final VoidCallback? onUsingGps;
 
   final DateTime Function() _clock;
   final TimerFactory _timerFactory;
@@ -121,6 +139,9 @@ class LocationController extends ChangeNotifier {
   /// SPEC-001 AC12: a fresh fix replacing last-known reloads only beyond this.
   static const double reloadThresholdMetres = 100;
 
+  /// SPEC-001 BR-7: accuracy above this (metres) is low; 100 m itself is not.
+  static const double lowAccuracyMetres = 100;
+
   static const Distance _distance = Distance();
 
   LocationStatus _status;
@@ -132,14 +153,43 @@ class LocationController extends ChangeNotifier {
   bool _paused = false;
   bool _disposed = false;
   LatLng? _lastSearchCentre;
+
+  /// BR-7: Android "approximate" permission only (precise not granted).
+  bool _approximateOnly = false;
+
+  /// US-1.3: confirmed manual position. Memory only (AC7, BR-10): never
+  /// stored, logged or sent anywhere except as `nearby_lots` parameters.
+  LatLng? _manual;
+
+  /// US-1.3 AC2: adjust mode (crosshair, hint, Confirm / Cancel).
+  bool _adjusting = false;
+
+  /// US-1.3 AC4: switched back to GPS without a fix (AC9 timer running).
+  bool _switchedToGps = false;
   Timer? _timeout;
   StreamSubscription<LocationFix>? _positionSub;
   StreamSubscription<bool>? _serviceSub;
 
   LocationStatus get status => _status;
 
-  /// The blue dot (GPS fix or last-known), or `null`.
+  /// The latest GPS fix or last-known position, or `null`. While a manual
+  /// position is active it is kept but not shown (US-1.3 AC3/AC4).
   LocationFix? get userFix => _fix;
+
+  /// The blue dot: [userFix] unless a manual position replaces it (US-1.3
+  /// AC3).
+  LocationFix? get blueDot => _manual == null ? _fix : null;
+
+  /// US-1.3: the confirmed manual position, or `null`.
+  LatLng? get manualPosition => _manual;
+
+  /// BR-8 / BR-11: the user's position — manual (if set) > GPS fix >
+  /// last-known. `null` without a real user position (never the default
+  /// centre, D7).
+  LatLng? get userPosition => _manual ?? _fix?.position;
+
+  /// US-1.3 AC2: adjust mode is active.
+  bool get isAdjusting => _adjusting;
 
   /// AC7: the camera follows the dot while this is on.
   bool get followMode => _followMode;
@@ -147,12 +197,25 @@ class LocationController extends ChangeNotifier {
   /// Last point passed to [onSearchCentreChanged].
   LatLng? get lastSearchCentre => _lastSearchCentre;
 
-  /// AC9: "Locating…" hint while a last-known position is shown.
-  bool get showLocatingHint => _status == LocationStatus.lastKnown;
+  /// AC9: "Locating…" hint while a last-known position is shown (not while
+  /// a manual position is used instead, US-1.3 AC4).
+  bool get showLocatingHint =>
+      _status == LocationStatus.lastKnown && _manual == null;
 
+  /// US-1.1 AC10 / US-1.3 AC8: the current user position (BR-8) is outside
+  /// the service area.
   bool get isOutOfArea {
+    final position = userPosition;
+    return position != null && !ServiceArea.contains(position);
+  }
+
+  /// US-1.3 AC1 / BR-7: the GPS position in use has low accuracy
+  /// (> 100 m, or approximate-only permission). Not while a manual position
+  /// is active (GPS is ignored then, AC4).
+  bool get isLowAccuracy {
     final fix = _fix;
-    return fix != null && !ServiceArea.contains(fix.position);
+    if (fix == null || _manual != null) return false;
+    return fix.accuracy > lowAccuracyMetres || _approximateOnly;
   }
 
   /// SPEC-001 §3 priority: offline/error (US-1.2) > permission / GPS /
@@ -167,7 +230,8 @@ class LocationController extends ChangeNotifier {
       case LocationStatus.serviceOff:
         return MapBannerKind.locationOff;
       case LocationStatus.noFix:
-        return MapBannerKind.noFix;
+        // US-1.3: once a manual position is set, "adjust manually?" is moot.
+        if (_manual == null) return MapBannerKind.noFix;
       case LocationStatus.starting:
       case LocationStatus.locating:
       case LocationStatus.lastKnown:
@@ -176,6 +240,9 @@ class LocationController extends ChangeNotifier {
     }
     if (isOutOfArea && !session.outOfAreaDismissed) {
       return MapBannerKind.outOfArea;
+    }
+    if (isLowAccuracy && !session.lowAccuracyDismissed) {
+      return MapBannerKind.lowAccuracy;
     }
     return null;
   }
@@ -243,6 +310,9 @@ class LocationController extends ChangeNotifier {
         return;
       }
     }
+    // BR-7: approximate-only permission (Android 12+) counts as low accuracy.
+    _approximateOnly = await service.isApproximateOnly();
+    if (_disposed) return;
     if (_paused) {
       // Prompt answered while backgrounded: resume() starts the stream.
       if (!_hasPositionStatus) _setStatus(LocationStatus.locating);
@@ -314,11 +384,19 @@ class LocationController extends ChangeNotifier {
           _clock().difference(last.timestamp) < lastKnownMaxAge) {
         _status = LocationStatus.lastKnown;
         _fix = last;
-        _firstPosition(last);
+        // US-1.3 AC4: a manual position stays in use.
+        if (_manual == null) _firstPosition(last);
         _notify();
         return;
       }
     }
+    if (_switchedToGps && !_firstPositionDone) {
+      // US-1.3 AC4 → US-1.1 AC9 after leaving a manual position: the camera
+      // is still at the manual position, so bring it to the default centre
+      // where the lots are loaded.
+      moveCamera(MapConstants.defaultCentre, MapConstants.initialZoom);
+    }
+    _switchedToGps = false;
     _enterNoLocation(LocationStatus.noFix);
   }
 
@@ -339,28 +417,35 @@ class LocationController extends ChangeNotifier {
     _fix = fix;
     _status = LocationStatus.tracking;
 
+    if (_manual != null) {
+      // US-1.3 AC4: GPS is ignored while a manual position is active — the
+      // fix is only remembered for a later switch back via "My location".
+      _notify();
+      return;
+    }
+
     switch (wasStatus) {
       case LocationStatus.locating:
       case LocationStatus.starting:
         _firstPosition(fix); // AC2
       case LocationStatus.noFix:
-        // AC12: late fix after the timeout.
+        // AC12: late fix after the timeout (a manual position was handled
+        // above, US-1.3 AC4).
         if (!_userPanned) {
           _firstPosition(fix);
         }
       // Otherwise: blue dot only, no camera jump, no reload.
-      // TODO(US-1.3): also "no manual position set" (AC12, US-1.3 AC4).
       case LocationStatus.lastKnown:
         // AC12: fresh fix replaces last-known; reload once only if the
         // new search point is > 100 m from the last search centre.
-        if (_followMode) moveCamera(fix.position, null);
+        if (_followMode && !_adjusting) moveCamera(fix.position, null);
         final point = ServiceArea.searchPointFor(fix.position);
         final last = _lastSearchCentre;
         if (last == null || _metres(last, point) > reloadThresholdMetres) {
           _search(point, SearchTrigger.firstPosition);
         }
       case LocationStatus.tracking:
-        if (_followMode) moveCamera(fix.position, null); // AC7
+        if (_followMode && !_adjusting) moveCamera(fix.position, null); // AC7
       case LocationStatus.consentDeclined:
       case LocationStatus.needed:
       case LocationStatus.blocked:
@@ -373,11 +458,15 @@ class LocationController extends ChangeNotifier {
   }
 
   /// AC2 / BR-3 (a): camera to the position at zoom 16, follow on, search.
+  /// In adjust mode (US-1.3) the camera belongs to the user: no jump.
   void _firstPosition(LocationFix fix) {
     _firstPositionDone = true;
-    _followMode = true;
-    _userPanned = false;
-    moveCamera(fix.position, MapConstants.userZoom);
+    _switchedToGps = false;
+    if (!_adjusting) {
+      _followMode = true;
+      _userPanned = false;
+      moveCamera(fix.position, MapConstants.userZoom);
+    }
     _search(ServiceArea.searchPointFor(fix.position), SearchTrigger.firstPosition);
   }
 
@@ -419,8 +508,32 @@ class LocationController extends ChangeNotifier {
     }
   }
 
-  /// "My location" FAB (AC8).
+  /// "My location" FAB (AC8; US-1.3 AC4 with a manual position).
   void onMyLocation() {
+    if (_adjusting) return; // FAB hidden in adjust mode
+    if (_manual != null) {
+      // US-1.3 AC4: back to GPS only if permission is granted and location
+      // services are on; otherwise keep the manual position and run the
+      // current banner action.
+      if (!_hasPositionStatus) {
+        _runBannerAction();
+        return;
+      }
+      _manual = null;
+      onUsingGps?.call();
+      if (_fix == null) {
+        // No fix yet: US-1.1 AC9 applies again after 10 s (TC-1.3.16).
+        _firstPositionDone = false;
+        _switchedToGps = true;
+        _status = LocationStatus.locating;
+        if (!_paused) {
+          if (_positionSub == null) _subscribe();
+          _startTimeout();
+        }
+        _notify();
+        return;
+      }
+    }
     final fix = _fix;
     if (fix != null) {
       _followMode = true;
@@ -431,6 +544,10 @@ class LocationController extends ChangeNotifier {
       return;
     }
     // No position: run the action of the current banner (cf. US-1.3 AC4).
+    _runBannerAction();
+  }
+
+  void _runBannerAction() {
     switch (banner) {
       case MapBannerKind.locationNeeded:
         unawaited(onEnable());
@@ -438,6 +555,7 @@ class LocationController extends ChangeNotifier {
         unawaited(onTurnOn());
       case MapBannerKind.noFix:
       case MapBannerKind.outOfArea:
+      case MapBannerKind.lowAccuracy:
       case MapBannerKind.loadError:
       case null:
         break;
@@ -474,8 +592,49 @@ class LocationController extends ChangeNotifier {
     await _service?.openLocationSettings();
   }
 
-  /// "Adjust" on `banner_no_fix` (AC9 → US-1.3 AC2, not built yet).
-  void onAdjust() => onAdjustRequested?.call();
+  /// "Adjust" on `banner_no_fix` (AC9) or `banner_low_accuracy` (US-1.3
+  /// AC1) → adjust mode (US-1.3 AC2).
+  void onAdjust() => startAdjust();
+
+  // ---------------------------------------------------------------- US-1.3
+
+  /// US-1.3 AC2: start adjust mode (banner "Adjust", menu "Set my position",
+  /// long-press). The camera now belongs to the user: follow mode off, no
+  /// camera jumps on fixes while adjusting. Panning while adjusting counts
+  /// as a pan (US-1.1 AC12) via [onUserGesture]. Idempotent: a long-press in
+  /// adjust mode only moves the camera (done by the screen).
+  void startAdjust() {
+    if (_adjusting) return;
+    _adjusting = true;
+    _followMode = false;
+    _notify();
+  }
+
+  /// US-1.3 AC5: leave adjust mode; position and pins unchanged, no request.
+  void cancelAdjust() {
+    if (!_adjusting) return;
+    _adjusting = false;
+    _notify();
+  }
+
+  /// US-1.3 AC3: [position] (the point under the crosshair) becomes the
+  /// manual position; new BR-3 (c) search at 1 km around it (BR-14: the
+  /// default centre if it is outside the service area, AC8).
+  void confirmAdjust(LatLng position) {
+    if (!_adjusting) return;
+    _adjusting = false;
+    _manual = position;
+    _followMode = false;
+    _firstPositionDone = true; // a later timeout must not reload
+    _search(ServiceArea.searchPointFor(position), SearchTrigger.manualPosition);
+    _notify();
+  }
+
+  /// × on the low-accuracy banner (US-1.3 AC1, D6): hidden for the session.
+  void onDismissLowAccuracy() {
+    session.lowAccuracyDismissed = true;
+    _notify();
+  }
 
   /// "Go to Vũng Tàu" (AC10): default centre at zoom 15, follow off.
   void onGoToVungTau() {

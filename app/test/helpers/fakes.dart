@@ -119,7 +119,18 @@ class FakeLocationService implements LocationService {
     this.isWeb = false,
     this.serviceEnabled = true,
     this.lastKnown,
+    this.approximateOnly = false,
   });
+
+  /// Android 12+ "approximate" permission only (BR-7).
+  bool approximateOnly;
+  int approximateCalls = 0;
+
+  @override
+  Future<bool> isApproximateOnly() async {
+    approximateCalls++;
+    return approximateOnly;
+  }
 
   /// Result of every [requestPermission] call (mutable between calls).
   LocationPermissionStatus requestResult;
@@ -152,6 +163,7 @@ class FakeLocationService implements LocationService {
       serviceEnabledCalls +
       streamListens +
       lastKnownCalls +
+      approximateCalls +
       openAppSettingsCalls +
       openLocationSettingsCalls;
 
@@ -234,6 +246,7 @@ LocationFix fixAt(
 /// SPEC-001 §8 mock points.
 abstract final class MockPoints {
   static final mp1 = fixAt(10.3460, 107.0740);
+  static final mp3LowAccuracy = fixAt(10.3265, 107.0845, accuracy: 150);
   static final mp4 = fixAt(10.3500, 107.0820);
   static final mp6 = fixAt(10.7769, 106.7009); // outside the service area
 }

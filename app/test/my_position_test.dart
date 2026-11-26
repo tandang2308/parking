@@ -315,7 +315,7 @@ void main() {
   });
 
   testWidgets('AC9 / TC-1.1.8: no fix in 10 s → default centre + no-fix '
-      'banner with Adjust (US-1.3 hook)', (tester) async {
+      'banner with Adjust (US-1.3 AC2)', (tester) async {
     _setLocale(tester, const Locale('en'));
     final service = FakeLocationService();
     await _launch(tester, service);
@@ -331,7 +331,11 @@ void main() {
     _expectCamera(tester, const LatLng(10.3460, 107.0740), 15);
     expect(_searches.single.point, const LatLng(10.3460, 107.0740));
 
-    await tester.tap(find.byKey(_adjust)); // no-op until US-1.3
+    // US-1.3 AC2: "Adjust" starts adjust mode; Cancel leaves it unchanged.
+    await tester.tap(find.byKey(_adjust));
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('hint-adjust')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('btn-adjust-cancel')));
     await _settle(tester);
     expect(tester.takeException(), isNull);
 

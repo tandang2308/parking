@@ -31,5 +31,12 @@
   "vehicle_motorbike": "Xe máy",
   "vehicle_car": "Ô tô",
   "a11y_pin": "{name}, {types}",
-  "a11y_cluster": "{count} bãi xe"
+  "a11y_cluster": "{count} bãi xe",
+  "banner_low_accuracy": "Vị trí có thể chưa chính xác",
+  "btn_confirm": "Xác nhận",
+  "btn_cancel": "Hủy",
+  "menu_set_position": "Đặt vị trí của tôi",
+  "hint_adjust": "Di chuyển bản đồ đến đúng vị trí của bạn",
+  "toast_using_gps": "Đang dùng vị trí GPS",
+  "a11y_manual_marker": "Vị trí của bạn (đặt thủ công)"
 }

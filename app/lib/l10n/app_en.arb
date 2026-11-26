@@ -54,7 +54,7 @@
   },
   "btn_adjust": "Adjust",
   "@btn_adjust": {
-    "description": "SPEC-001 §6, US-1.1 AC9 / US-1.3 AC2: starts adjust mode."
+    "description": "SPEC-001 §6, US-1.1 AC9 / US-1.3 AC1–AC2: starts adjust mode (no-fix and low-accuracy banners)."
   },
   "out_of_area": "ParkFinder currently covers Vũng Tàu only",
   "@out_of_area": {
@@ -165,5 +165,33 @@
         "type": "int"
       }
     }
+  },
+  "banner_low_accuracy": "Your location may be inaccurate",
+  "@banner_low_accuracy": {
+    "description": "SPEC-001 §6, US-1.3 AC1: banner on a low-accuracy fix (BR-7), with Adjust and ×."
+  },
+  "btn_confirm": "Confirm",
+  "@btn_confirm": {
+    "description": "SPEC-001 §6, US-1.3 AC3: confirms the manual position under the crosshair."
+  },
+  "btn_cancel": "Cancel",
+  "@btn_cancel": {
+    "description": "SPEC-001 §6, US-1.3 AC5: leaves adjust mode without changes."
+  },
+  "menu_set_position": "Set my position",
+  "@menu_set_position": {
+    "description": "SPEC-001 §6, US-1.3 AC2: overflow menu item that starts adjust mode."
+  },
+  "hint_adjust": "Move the map to your exact position",
+  "@hint_adjust": {
+    "description": "SPEC-001 §6, US-1.3 AC2: hint shown in adjust mode."
+  },
+  "toast_using_gps": "Using GPS location",
+  "@toast_using_gps": {
+    "description": "SPEC-001 §6, US-1.3 AC4: toast when \"My location\" switches from the manual position back to GPS."
+  },
+  "a11y_manual_marker": "Your position (set manually)",
+  "@a11y_manual_marker": {
+    "description": "SPEC-001 §6, NFR-8, US-1.3 AC3: semantics label of the manual position marker."
   }
 }
