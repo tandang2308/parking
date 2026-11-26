@@ -17,3 +17,4 @@ Create from [`../../templates/adr-template.md`](../../templates/adr-template.md)
 | [ADR-0009](ADR-0009-map-tile-provider.md) | Map tile provider for flutter_map (free for beta) | Accepted (conditional on Sprint 1 spike) | 2026-11-24 |
 | [ADR-0010](ADR-0010-guardrail-hooks.md) | Enforce safety rules with Claude Code hooks | Accepted | 2026-11-24 |
 | [ADR-0011](ADR-0011-github-projects-for-sprint-tracking.md) | Use GitHub Projects instead of Jira for sprint tracking (partly supersedes ADR-0006) | Accepted | 2026-11-24 |
+| [ADR-0013](ADR-0013-qa-by-sub-agent.md) | Manual QA runs by a QA sub-agent instead of a human tester | Accepted | 2026-11-26 |
