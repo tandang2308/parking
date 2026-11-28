@@ -12,11 +12,11 @@ import 'package:parkfinder/main.dart';
 import 'helpers/fakes.dart';
 
 /// A style loader that never completes: no network in tests.
-Future<vt.Style> _pendingStyle(String _) => Completer<vt.Style>().future;
+Future<vt.Style> _pendingStyle(String _, String _) => Completer<vt.Style>().future;
 
 /// A tiny offline style (background only, no sources): exercises the real
 /// VectorTileLayer without any network access.
-Future<vt.Style> _offlineStyle(String _) async => vt.Style(
+Future<vt.Style> _offlineStyle(String _, String _) async => vt.Style(
       theme: const vt.ThemeReader().read(const {
         'version': 8,
         'sources': <String, Object?>{},

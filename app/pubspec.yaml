@@ -46,6 +46,10 @@ dependencies:
   geolocator_web: ^4.1.4
   web: ^1.1.1
   supabase: ^2.16.5
+  # BR-17 style rewrite (StyleLabelClient) and per-language style cache
+  # folder. Both were already in pubspec.lock (transitive, BSD-3-Clause).
+  http: ^1.6.0
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
@@ -57,7 +61,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  http: ^1.6.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -30,6 +30,7 @@
   "distance_km": "{km} km",
   "vehicle_motorbike": "Xe máy",
   "vehicle_car": "Ô tô",
+  "label_customers_only": "Chỉ dành cho khách",
   "a11y_pin": "{name}, {types}",
   "a11y_cluster": "{count} bãi xe",
   "banner_low_accuracy": "Vị trí có thể chưa chính xác",

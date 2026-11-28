@@ -15,7 +15,7 @@ import 'helpers/fakes.dart';
 /// SPEC-001 US-1.4 widget tests (TC-1.4.1–TC-1.4.4, TC-1.4.7 automated part,
 /// TC-1.4.8 flow, D3/D4 of MTG-2026-11-24-po-decisions-2).
 
-Future<vt.Style> _pendingStyle(String _) => Completer<vt.Style>().future;
+Future<vt.Style> _pendingStyle(String _, String _) => Completer<vt.Style>().future;
 
 const _allow = ValueKey('consent-allow');
 const _notNow = ValueKey('consent-not-now');

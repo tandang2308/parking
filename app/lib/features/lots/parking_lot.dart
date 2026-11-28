@@ -24,6 +24,7 @@ class ParkingLot {
     required this.vehicleTypes,
     this.address,
     this.isVerified = false,
+    this.customersOnly = false,
     this.distanceM = 0,
   });
 
@@ -49,6 +50,8 @@ class ParkingLot {
               VehicleType.fromDb(t)!,
       },
       isVerified: row['is_verified'] == true,
+      // BR-16 (v0.4): missing or null (older backend) counts as false.
+      customersOnly: row['customers_only'] == true,
       distanceM: (row['distance_m'] as num?)?.round() ?? 0,
     );
   }
@@ -59,6 +62,10 @@ class ParkingLot {
   final LatLng position;
   final Set<VehicleType> vehicleTypes;
   final bool isVerified;
+
+  /// OSM `access=customers` lot (SPEC-001 BR-16): same pin style as other
+  /// lots (BR-6); the mini card shows `label_customers_only`.
+  final bool customersOnly;
 
   /// Distance from the **search point** (RPC). The card uses BR-11 instead.
   final int distanceM;

@@ -5,8 +5,8 @@ import 'lot_pins_layer.dart';
 import 'lots_geo.dart';
 import 'parking_lot.dart';
 
-/// Mini card of the selected lot (SPEC-001 US-1.2 AC8): name, vehicle
-/// types and, when the user's position is known, the BR-11 distance
+/// Mini card of the selected lot (SPEC-001 US-1.2 AC8): name, the
+/// customer-only label (BR-16), vehicle types and, when the user's position is known, the BR-11 distance
 /// formatted per BR-15. Tap → `/lot/:id`.
 class LotMiniCard extends StatelessWidget {
   const LotMiniCard({
@@ -73,6 +73,16 @@ class LotMiniCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall,
                       ),
+                      // BR-16: customer-only lots get a label under the
+                      // name; the pin style stays as BR-6.
+                      if (lot.customersOnly)
+                        Text(
+                          l10n.label_customers_only,
+                          key: const ValueKey('lot-card-customers-only'),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       const SizedBox(height: 2),
                       Text(
                         types,

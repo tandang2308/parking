@@ -26,6 +26,8 @@ flutter run --profile -d <device-id>  # Profile mode, for performance/FPS checks
 | `TILE_ATTRIBUTION` | `OpenFreeMap © OpenMapTiles Data from OpenStreetMap` | Always-visible attribution (SPEC-001 BR-13) |
 | `TILE_MAX_ZOOM` | `18` | Maximum map zoom |
 
+Map labels follow the app language (SPEC-001 BR-17): the vector style is rewritten as it is downloaded (`lib/features/map/map_label_language.dart`): vi → OSM `name`, en → `name:en` with a fallback to `name`. On Android/iOS each language has its own style cache folder; a language change applies on the next map load. Raster tiles are not changed.
+
 Example (raster, **local development only** — OSM standard tiles must never ship, ADR-0009 decision 2):
 ```sh
 flutter run -d chrome --dart-define=TILE_RENDERER=raster \

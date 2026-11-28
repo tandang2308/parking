@@ -1,4 +1,5 @@
 -- US-1.2 / SPEC-001 §5 / TC-1.2.8 — pgTAP tests for public.parking_lots and public.nearby_lots
+-- (v0.4: ordinality alias lists include customers_only; BR-16 tests are in customers_only.test.sql)
 -- Run locally: npx supabase test db   (never against the cloud project)
 -- All fixture data is inserted inside this transaction and rolled back at the end.
 
@@ -49,7 +50,7 @@ from generate_series(1, 60) as i;
 -- Ordering + tie-break (default radius 1000 m)
 -- ---------------------------------------------------------------------------
 select is(
-  (select array_agg(id order by ord) from nearby_lots(10.3460, 107.0740) with ordinality as t(id, name, address, lot_lat, lot_lng, vehicle_types, is_verified, distance_m, ord)),
+  (select array_agg(id order by ord) from nearby_lots(10.3460, 107.0740) with ordinality as t(id, name, address, lot_lat, lot_lng, vehicle_types, is_verified, customers_only, distance_m, ord)),
   array['00000000-0000-0000-0000-00000000000e',
         '00000000-0000-0000-0000-00000000000a',
         '00000000-0000-0000-0000-000000000071',
@@ -62,7 +63,7 @@ select is(
 select ok(
   (select bool_and(d_prev <= distance_m)
    from (select distance_m, lag(distance_m) over (order by ord) as d_prev
-         from nearby_lots(10.3460, 107.0740, 5000) with ordinality as t(id, name, address, lot_lat, lot_lng, vehicle_types, is_verified, distance_m, ord)) s
+         from nearby_lots(10.3460, 107.0740, 5000) with ordinality as t(id, name, address, lot_lat, lot_lng, vehicle_types, is_verified, customers_only, distance_m, ord)) s
    where d_prev is not null),
   'distance_m is non-decreasing in result order (radius 5000)'
 );

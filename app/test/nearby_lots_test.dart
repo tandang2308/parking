@@ -23,7 +23,7 @@ import 'helpers/fakes.dart';
 /// card + `/lot/:id` (AC8), cap hint (AC9), default centre (AC10), outside
 /// area (AC11), §6 strings vi/en, NFR-8 labels, 320 px layout.
 
-Future<vt.Style> _pendingStyle(String _) => Completer<vt.Style>().future;
+Future<vt.Style> _pendingStyle(String _, String _) => Completer<vt.Style>().future;
 
 const _centre = MapConstants.defaultCentre;
 const _fab = ValueKey('fab-my-location');

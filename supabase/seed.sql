@@ -11,12 +11,14 @@
 --   MP-5 offshore (10.3400, 107.1150): 0 lots within 1 km, >= 1 within 3 km (MP-2 cluster is ~1.5–2.7 km away)
 --   MP-7 NW corner (10.4400, 107.0400): 0 lots within 3 km
 --   MP-1, MP-3, MP-4: a few lots each so pins appear at those points
+--   MP-1: exactly one lot with customers_only = true ("TEST Bãi Trước chỉ khách", BR-16, TC-1.2.34)
 --
 -- Check after seeding:
 --   select count(*) from nearby_lots(10.3440, 107.0960, 1000);   -- MP-2: 50 (capped, >= 60 in range)
 --   select count(*) from nearby_lots(10.3400, 107.1150, 1000);   -- MP-5: 0
 --   select count(*) from nearby_lots(10.3400, 107.1150, 3000);   -- MP-5: >= 1
 --   select count(*) from nearby_lots(10.4400, 107.0400, 3000);   -- MP-7: 0
+--   select name from nearby_lots(10.3460, 107.0740) where customers_only;   -- MP-1: TEST Bãi Trước chỉ khách
 
 set search_path = public, extensions;
 
@@ -57,6 +59,14 @@ select
   case when i % 3 <> 0 then 30000 end,
   'survey'
 from generate_series(1, 8) as i;
+
+-- MP-1: one customer-only lot (SPEC-001 v0.4 BR-16, TC-1.2.34), 120 m from MP-1.
+-- All other TEST lots keep the default customers_only = false (e.g. "TEST Bãi Trước 1" as the counterpart).
+insert into public.parking_lots (name, location, address, vehicle_types, price_motorbike, price_car, source, customers_only)
+values
+  ('TEST Bãi Trước chỉ khách',
+   st_project(st_setsrid(st_makepoint(107.0740, 10.3460), 4326)::geography, 120, radians(200))::geography,
+   'TEST Thùy Vân (khách của cửa hàng)', '{motorbike,car}', 5000, 30000, 'survey', true);
 
 -- MP-3 Tượng Chúa Kitô: 3 lots; MP-4 Chợ Vũng Tàu: 4 lots
 insert into public.parking_lots (name, location, vehicle_types, source)
