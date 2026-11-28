@@ -37,7 +37,7 @@ See ADRs: [ADR-0002](adr/ADR-0002-zero-cost-mvp-stack.md), [ADR-0003](adr/ADR-00
 | Table | Key fields |
 |---|---|
 | `profiles` | id, role (`driver` / `owner` / `admin`), display_name, locale |
-| `parking_lots` | id, name, location (`geography(Point)`), address, vehicle_types[], price_motorbike, price_car, opening_hours, capacity, source (`osm` / `survey` / `owner`), last_verified_at, is_verified |
+| `parking_lots` | id, name, location (`geography(Point)`), address, vehicle_types[], price_motorbike, price_car, opening_hours, capacity, source (`osm` / `survey` / `owner`), last_verified_at, is_verified, customers_only (OSM `access=customers`, SPEC-001 BR-16) |
 | `lot_photos` | id, lot_id, storage_path |
 | `lot_owners` | id, lot_id, owner_id, status (`pending` / `verified` / `rejected`), documents, reviewed_by, reviewed_at |
 | `lot_availability` | lot_id, status (`available` / `almost_full` / `full`), updated_at, updated_by |
