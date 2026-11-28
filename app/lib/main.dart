@@ -146,8 +146,6 @@ class _ParkFinderAppState extends State<ParkFinderApp> {
           requestPermissionOnStart: access.requestPermission,
           onReopenConsent: access.onReopenConsent,
           onSearchCentreChanged: widget.onSearchCentreChanged,
-          // TODO(US-1.3): "Adjust" starts adjust mode (US-1.3 AC2).
-          onAdjustRequested: null,
           clock: widget.clock,
           timerFactory: widget.timerFactory,
         ),

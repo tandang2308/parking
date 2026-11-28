@@ -119,4 +119,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String a11y_cluster(int count) {
     return '$count bãi xe';
   }
+
+  @override
+  String get banner_low_accuracy => 'Vị trí có thể chưa chính xác';
+
+  @override
+  String get btn_confirm => 'Xác nhận';
+
+  @override
+  String get btn_cancel => 'Hủy';
+
+  @override
+  String get menu_set_position => 'Đặt vị trí của tôi';
+
+  @override
+  String get hint_adjust => 'Di chuyển bản đồ đến đúng vị trí của bạn';
+
+  @override
+  String get toast_using_gps => 'Đang dùng vị trí GPS';
+
+  @override
+  String get a11y_manual_marker => 'Vị trí của bạn (đặt thủ công)';
 }

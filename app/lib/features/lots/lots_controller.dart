@@ -51,8 +51,8 @@ class LotsRequest {
 
 /// Nearby-lots state of the map screen (SPEC-001 US-1.2 AC1, AC3–AC6, AC9).
 ///
-/// Loads only on BR-3 triggers: [onSearchTrigger] (a)/(b) (and (c) once
-/// US-1.3 exists), [searchThisArea] (d), [retry] / [expand] / the single
+/// Loads only on BR-3 triggers: [onSearchTrigger] (a)–(c) (first position,
+/// "My location", confirmed manual position — US-1.3 AC3), [searchThisArea] (d), [retry] / [expand] / the single
 /// automatic retry on reconnect (e). Pan/zoom never loads.
 class LotsController extends ChangeNotifier {
   LotsController({

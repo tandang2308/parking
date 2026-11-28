@@ -176,7 +176,7 @@ abstract class AppLocalizations {
   /// **'Can\'t get your location — adjust manually?'**
   String get banner_no_fix;
 
-  /// SPEC-001 §6, US-1.1 AC9 / US-1.3 AC2: starts adjust mode.
+  /// SPEC-001 §6, US-1.1 AC9 / US-1.3 AC1–AC2: starts adjust mode (no-fix and low-accuracy banners).
   ///
   /// In en, this message translates to:
   /// **'Adjust'**
@@ -289,6 +289,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} parking lots'**
   String a11y_cluster(int count);
+
+  /// SPEC-001 §6, US-1.3 AC1: banner on a low-accuracy fix (BR-7), with Adjust and ×.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location may be inaccurate'**
+  String get banner_low_accuracy;
+
+  /// SPEC-001 §6, US-1.3 AC3: confirms the manual position under the crosshair.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get btn_confirm;
+
+  /// SPEC-001 §6, US-1.3 AC5: leaves adjust mode without changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get btn_cancel;
+
+  /// SPEC-001 §6, US-1.3 AC2: overflow menu item that starts adjust mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my position'**
+  String get menu_set_position;
+
+  /// SPEC-001 §6, US-1.3 AC2: hint shown in adjust mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the map to your exact position'**
+  String get hint_adjust;
+
+  /// SPEC-001 §6, US-1.3 AC4: toast when "My location" switches from the manual position back to GPS.
+  ///
+  /// In en, this message translates to:
+  /// **'Using GPS location'**
+  String get toast_using_gps;
+
+  /// SPEC-001 §6, NFR-8, US-1.3 AC3: semantics label of the manual position marker.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position (set manually)'**
+  String get a11y_manual_marker;
 }
 
 class _AppLocalizationsDelegate

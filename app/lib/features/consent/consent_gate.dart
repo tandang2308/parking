@@ -155,12 +155,45 @@ class _ConsentGateState extends State<ConsentGate> {
           body: Center(child: CircularProgressIndicator()),
         );
       case _Phase.consent:
-        return ConsentScreen(onAllow: _onAllow, onNotNow: _onNotNow);
+        final consent = ConsentScreen(onAllow: _onAllow, onNotNow: _onNotNow);
+        if (!_mapShown) return consent;
+        // S1 reopened from the map ("Enable" / "My location" after a
+        // decline): keep the map alive behind S1 so "Not now" returns to it
+        // unchanged — e.g. a manual position stays (US-1.3 AC4, TC-1.3.15a).
+        return _mapLayer(context, offstage: true, consent: consent);
       case _Phase.map:
-        final access = isLocationUseAllowed(_record, widget.consentVersion)
-            ? LocationAccess.granted(requestPermission: _justAllowed)
-            : LocationAccess.declined(onReopenConsent: _onReopenConsent);
-        return widget.mapBuilder(context, access);
+        return _mapLayer(context, offstage: false);
     }
+  }
+
+  /// The same tree shape in both phases, so the map's state survives S1.
+  Widget _mapLayer(
+    BuildContext context, {
+    required bool offstage,
+    Widget? consent,
+  }) {
+    return Stack(
+      children: [
+        Offstage(offstage: offstage, child: _map(context)),
+        ?consent,
+      ],
+    );
+  }
+
+  /// True once the map has been shown in this session.
+  bool _mapShown = false;
+
+  Widget _map(BuildContext context) {
+    _mapShown = true;
+    final allowed = isLocationUseAllowed(_record, widget.consentVersion);
+    final access = allowed
+        ? LocationAccess.granted(requestPermission: _justAllowed)
+        : LocationAccess.declined(onReopenConsent: _onReopenConsent);
+    // Keyed by the access kind: "Allow" after a decline builds a new map
+    // (it requests the permission on start); "Not now" keeps the old one.
+    return KeyedSubtree(
+      key: ValueKey('map-allowed-$allowed'),
+      child: widget.mapBuilder(context, access),
+    );
   }
 }

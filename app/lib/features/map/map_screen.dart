@@ -18,6 +18,7 @@ import '../lots/lots_controller.dart';
 import '../lots/lots_geo.dart';
 import '../lots/lots_repository.dart';
 import '../lots/parking_lot.dart';
+import 'adjust_mode.dart';
 import 'base_tile_layer.dart';
 import 'map_attribution.dart';
 import 'map_banner.dart';
@@ -25,7 +26,8 @@ import 'map_constants.dart';
 
 /// S2 map screen (SPEC-001 §3): full-screen map, blue dot + accuracy circle,
 /// "My location" FAB, one banner at the top (US-1.1), lot pins, clusters,
-/// "Search this area" chip and the lot mini card (US-1.2).
+/// "Search this area" chip and the lot mini card (US-1.2), overflow menu,
+/// adjust mode and the manual position marker (US-1.3).
 class MapScreen extends StatefulWidget {
   const MapScreen({
     super.key,
@@ -38,7 +40,6 @@ class MapScreen extends StatefulWidget {
     this.requestPermissionOnStart = false,
     this.onReopenConsent,
     this.onSearchCentreChanged,
-    this.onAdjustRequested,
     this.mapController,
     this.clock,
     this.timerFactory,
@@ -64,12 +65,9 @@ class MapScreen extends StatefulWidget {
   /// "Enable" after a declined consent (US-1.1 AC3).
   final VoidCallback? onReopenConsent;
 
-  /// Observer of the BR-3 (a)/(b) search triggers (tests). Lots are loaded
+  /// Observer of the BR-3 (a)–(c) search triggers (tests). Lots are loaded
   /// by the screen's own lots controller.
   final SearchCentreCallback? onSearchCentreChanged;
-
-  /// "Adjust" on `banner_no_fix` — TODO(US-1.3): start adjust mode.
-  final VoidCallback? onAdjustRequested;
 
   /// Optional, for tests.
   final MapController? mapController;
@@ -115,14 +113,14 @@ class _MapScreenState extends State<MapScreen>
       service: widget.locationService,
       session: widget.session,
       moveCamera: _moveCamera,
-      // BR-3 (a)/(b) → US-1.2 AC1 (point already per BR-14).
+      // BR-3 (a)–(c) → US-1.2 AC1 (point already per BR-14).
       onSearchCentreChanged: (point, trigger) {
         widget.onSearchCentreChanged?.call(point, trigger);
         _lots.onSearchTrigger(point, trigger);
       },
       onReopenConsent: widget.onReopenConsent,
       onShowUnblockGuide: _showUnblockGuide,
-      onAdjustRequested: widget.onAdjustRequested,
+      onUsingGps: _showUsingGpsToast,
       clock: widget.clock,
       timerFactory: widget.timerFactory,
     )..addListener(_onLocationChanged);
@@ -173,6 +171,46 @@ class _MapScreenState extends State<MapScreen>
 
   void _showUnblockGuide() {
     if (mounted) unawaited(showWebUnblockGuide(context));
+  }
+
+  /// US-1.3 AC4: toast `toast_using_gps` (floating, above the FAB and the
+  /// attribution, BR-13).
+  void _showUsingGpsToast() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          key: const ValueKey('toast-using-gps'),
+          content: Text(l10n.toast_using_gps),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+        ),
+      );
+  }
+
+  // ---------------------------------------------------------------- US-1.3
+
+  /// AC2: "Set my position" in the overflow menu.
+  void _onSetPosition() => _location.startAdjust();
+
+  /// AC2: long-press starts adjust mode (or, in adjust mode, only moves) and
+  /// animates the pressed point under the crosshair (Q-QA-17).
+  void _onLongPress(TapPosition _, LatLng point) {
+    _location
+      ..startAdjust()
+      ..onUserGesture(); // a user-initiated move (US-1.1 AC7/AC12)
+    // Like a cluster tap: the "Search this area" chip may appear later.
+    _lots.onUserZoom();
+    _moveCamera(point, null);
+  }
+
+  /// AC3: the point under the crosshair (the map centre) becomes the manual
+  /// position.
+  void _onConfirmAdjust() {
+    _camera.stop();
+    _location.confirmAdjust(_map.camera.center);
   }
 
   void _onMapReady() {
@@ -256,19 +294,23 @@ class _MapScreenState extends State<MapScreen>
   MapBannerKind? get _bannerKind =>
       _lots.hasError ? MapBannerKind.loadError : _location.banner;
 
-  /// BR-11: the user's position (GPS fix or last-known), or `null` when
-  /// there is none (declined, denied/blocked, GPS off, timeout without
-  /// last-known). The default centre is never a distance source (PO
-  /// decision on PR #27): the card then hides the distance.
-  /// TODO(US-1.3): a manual position takes precedence.
-  LatLng? get _userPosition => _location.userFix?.position;
+  /// BR-11: the user's position (manual, GPS fix or last-known — BR-8), or
+  /// `null` when there is none (declined, denied/blocked, GPS off, timeout
+  /// without last-known). The default centre is never a distance source
+  /// (D7): the card then hides the distance.
+  LatLng? get _userPosition => _location.userPosition;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final fix = _location.userFix;
+    // US-1.3 AC3: a manual position replaces the blue dot.
+    final fix = _location.blueDot;
+    final manual = _location.manualPosition;
+    final adjusting = _location.isAdjusting;
     final bannerKind = _bannerKind;
-    final selected = _lots.selectedLot;
+    // Adjust mode shows only the hint at the top and Confirm / Cancel at
+    // the bottom (the card and FAB come back afterwards).
+    final selected = adjusting ? null : _lots.selectedLot;
 
     return Scaffold(
       body: Stack(
@@ -283,6 +325,7 @@ class _MapScreenState extends State<MapScreen>
               onMapReady: _onMapReady,
               onPositionChanged: _onPositionChanged,
               onTap: _onMapTap,
+              onLongPress: _onLongPress, // US-1.3 AC2
             ),
             children: [
               buildBaseTileLayer(
@@ -310,7 +353,8 @@ class _MapScreenState extends State<MapScreen>
                 lots: _lots.lots,
                 selectedId: selected?.id,
                 spiderfiedKey: _spiderKey,
-                onLotTap: _lots.select,
+                // Adjust mode: pins are not selectable (no card shown).
+                onLotTap: adjusting ? (_) {} : _lots.select,
                 onClusterTap: _onClusterTap,
               ),
               if (fix != null)
@@ -324,6 +368,8 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
+              if (manual != null)
+                MarkerLayer(markers: [manualPositionMarker(context, manual)]),
               // SPEC-001 BR-13: attribution always visible, text from config.
               MapAttribution(
                 key: const ValueKey('map-attribution'),
@@ -331,62 +377,23 @@ class _MapScreenState extends State<MapScreen>
               ),
             ],
           ),
+          // US-1.3 AC2: crosshair fixed at the screen centre (= map centre).
+          if (adjusting) const AdjustCrosshair(),
           SafeArea(
             child: Align(
               alignment: Alignment.topCenter,
               child: Padding(
                 padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (bannerKind != null)
-                      buildLocationBanner(
-                        context,
-                        bannerKind,
-                        _location,
-                        onRetry: _lots.retry,
+                child: adjusting
+                    ? const AdjustHint()
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildTopColumn(l10n, bannerKind)),
+                          const SizedBox(width: 8),
+                          _OverflowMenu(onSetPosition: _onSetPosition),
+                        ],
                       ),
-                    ..._buildEmptyState(l10n),
-                    if (_lots.showSearchArea)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: ActionChip(
-                          key: const ValueKey('chip-search-area'),
-                          avatar: const Icon(Icons.search),
-                          label: Text(l10n.btn_search_area),
-                          onPressed: _lots.searchThisArea,
-                        ),
-                      ),
-                    if (_lots.isLoading)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: _LoadingChip(key: ValueKey('lots-loading')),
-                      ),
-                    if (_lots.showCapHint)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Chip(
-                          key: const ValueKey('hint-cap'),
-                          label: Text(
-                            l10n.hint_cap(LotsRepository.maxLots),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    if (_location.showLocatingHint)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Chip(
-                          key: const ValueKey('hint-locating'),
-                          avatar: const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          label: Text(l10n.hint_locating),
-                        ),
-                      ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -420,25 +427,102 @@ class _MapScreenState extends State<MapScreen>
                 ),
               ),
             ),
-          // "My location" FAB above the attribution (BR-13: never covered).
-          Positioned(
-            right: 16,
-            bottom: 48,
-            child: SafeArea(
-              child: FloatingActionButton(
-                key: const ValueKey('fab-my-location'),
-                tooltip: l10n.a11y_my_location,
-                onPressed: _location.onMyLocation,
-                child: Icon(
-                  _location.followMode
-                      ? Icons.my_location
-                      : Icons.location_searching,
+          if (adjusting)
+            // US-1.3 AC2/AC3/AC5: above the attribution (BR-13).
+            Positioned(
+              left: 8,
+              right: 8,
+              bottom: 48,
+              child: SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: LotMiniCard.maxWidth,
+                    ),
+                    child: AdjustActions(
+                      onCancel: _location.cancelAdjust,
+                      onConfirm: _onConfirmAdjust,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            // "My location" FAB above the attribution (BR-13: never covered).
+            Positioned(
+              right: 16,
+              bottom: 48,
+              child: SafeArea(
+                child: FloatingActionButton(
+                  key: const ValueKey('fab-my-location'),
+                  tooltip: l10n.a11y_my_location,
+                  onPressed: _location.onMyLocation,
+                  child: Icon(
+                    _location.followMode
+                        ? Icons.my_location
+                        : Icons.location_searching,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
+    );
+  }
+
+  /// Top of the map outside adjust mode: the single banner (§3), empty
+  /// states, "Search this area", loading, cap and "Locating…" hints.
+  Widget _buildTopColumn(AppLocalizations l10n, MapBannerKind? bannerKind) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (bannerKind != null)
+          buildLocationBanner(
+            context,
+            bannerKind,
+            _location,
+            onRetry: _lots.retry,
+          ),
+        ..._buildEmptyState(l10n),
+        if (_lots.showSearchArea)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: ActionChip(
+              key: const ValueKey('chip-search-area'),
+              avatar: const Icon(Icons.search),
+              label: Text(l10n.btn_search_area),
+              onPressed: _lots.searchThisArea,
+            ),
+          ),
+        if (_lots.isLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: _LoadingChip(key: ValueKey('lots-loading')),
+          ),
+        if (_lots.showCapHint)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Chip(
+              key: const ValueKey('hint-cap'),
+              label: Text(
+                l10n.hint_cap(LotsRepository.maxLots),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        if (_location.showLocatingHint)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Chip(
+              key: const ValueKey('hint-locating'),
+              avatar: const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              label: Text(l10n.hint_locating),
+            ),
+          ),
+      ],
     );
   }
 
@@ -488,6 +572,40 @@ class _LoadingChip extends StatelessWidget {
           dimension: 20,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
+      ),
+    );
+  }
+}
+
+/// US-1.3 AC2: overflow menu (top right) with "Set my position".
+class _OverflowMenu extends StatelessWidget {
+  const _OverflowMenu({required this.onSetPosition});
+
+  final VoidCallback onSetPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Material(
+      elevation: 2,
+      shape: const CircleBorder(),
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      // Tooltip: the framework's localised "Show menu" (NFR-8).
+      child: PopupMenuButton<void>(
+        key: const ValueKey('map-menu'),
+        icon: const Icon(Icons.more_vert),
+        constraints: const BoxConstraints(minWidth: 112),
+        itemBuilder: (context) => [
+          PopupMenuItem<void>(
+            key: const ValueKey('menu-set-position'),
+            onTap: onSetPosition,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.edit_location_alt_outlined),
+              title: Text(l10n.menu_set_position),
+            ),
+          ),
+        ],
       ),
     );
   }

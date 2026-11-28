@@ -96,6 +96,10 @@ abstract interface class LocationService {
   /// Android only: last known position, or `null`. Must not throw.
   Future<LocationFix?> lastKnownPosition();
 
+  /// Android 12+: only "approximate" location was granted (BR-7 low
+  /// accuracy, US-1.3 AC1). Always `false` on Web. Must not throw.
+  Future<bool> isApproximateOnly();
+
   /// Android: opens this app's settings page (AC5).
   Future<void> openAppSettings();
 
@@ -312,6 +316,18 @@ class PlatformLocationService implements LocationService {
     } catch (e) {
       debugPrint('Last known position failed: ${e.runtimeType}');
       return null;
+    }
+  }
+
+  @override
+  Future<bool> isApproximateOnly() async {
+    if (!_isAndroid) return false;
+    try {
+      return await _platform.getLocationAccuracy() ==
+          LocationAccuracyStatus.reduced;
+    } catch (e) {
+      debugPrint('Location accuracy check failed: ${e.runtimeType}');
+      return false;
     }
   }
 

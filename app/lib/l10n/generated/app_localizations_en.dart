@@ -119,4 +119,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String a11y_cluster(int count) {
     return '$count parking lots';
   }
+
+  @override
+  String get banner_low_accuracy => 'Your location may be inaccurate';
+
+  @override
+  String get btn_confirm => 'Confirm';
+
+  @override
+  String get btn_cancel => 'Cancel';
+
+  @override
+  String get menu_set_position => 'Set my position';
+
+  @override
+  String get hint_adjust => 'Move the map to your exact position';
+
+  @override
+  String get toast_using_gps => 'Using GPS location';
+
+  @override
+  String get a11y_manual_marker => 'Your position (set manually)';
 }
