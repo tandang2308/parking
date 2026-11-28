@@ -4,10 +4,10 @@
 |---|---|
 | Epic | E1 |
 | Status | Draft |
-| Version | 0.3.1 |
+| Version | 0.4 |
 | Author | Tech Lead (with PO) |
 | Reviewers | PO, Tech Lead, QA |
-| Last updated | 2026-11-24 |
+| Last updated | 2026-11-28 |
 | Related | ADR-0002, MTG-2026-11-24-kickoff, MTG-2026-11-24-po-decisions, US-1.1, US-1.2, US-1.3, US-1.4 · depends on US-4.1 (lot data) · full privacy policy content and i18n framework: US-5.2 / SPEC-005 (S1 consent itself is US-1.4, Sprint 1 — D1) |
 
 Decisions marked **(Dn)** are PO decisions from MTG-2026-11-24-po-decisions. Items marked *(Tech Lead decision — PO approves via PR)* resolve QA questions Q-QA-n (see §9 "Resolved questions").
@@ -59,7 +59,7 @@ All user-facing strings below have a key in §6 (D2).
 - **AC5 (error/offline):** Given the request fails or there is no internet, then the banner "Can't load parking lots" + "Retry" is shown, existing pins are kept, and no crash or blank screen occurs. "Retry" repeats the last request (same point and radius). Automatic retry (Q-QA-11): exactly **one** automatic retry when connectivity changes from offline to online (Web: the browser `online` event); never on HTTP/server errors; if that retry fails, the banner stays and only manual "Retry" remains. *(Tech Lead decision — PO approves via PR)*
 - **AC6 (search this area):** Given the user pans or zooms beyond BR-3's threshold, then a "Search this area" button appears; when tapped, lots are loaded around the map centre (radius per BR-3) and the button hides. Lots are **never** reloaded automatically on pan/zoom.
 - **AC7 (clustering):** Given ≥ 2 pins overlap on screen (BR-4), then they are shown as one cluster with a count; tapping the cluster zooms in until the pins separate. Pins that cannot separate at the maximum zoom (identical/near-identical coordinates) are spiderfied (fanned out) on tap so each one can be selected (Q-QA-13). *(Tech Lead decision — PO approves via PR)*
-- **AC8 (tap pin → hand-off):** Given pins are shown, when the user taps a pin, then it is highlighted and a mini card shows name, vehicle types and the distance from the user's current position (BR-11) formatted per **BR-15 (D3)** — the distance is **hidden** when there is no user position (BR-11, v0.3 D7); tapping the card opens the lot detail screen (SPEC-003, US-3.1). Out of scope here beyond navigation to route `/lot/:id`.
+- **AC8 (tap pin → hand-off):** Given pins are shown, when the user taps a pin, then it is highlighted and a mini card shows name, vehicle types, the "Customers only" label for customer-only lots (BR-16, v0.4) and the distance from the user's current position (BR-11) formatted per **BR-15 (D3)** — the distance is **hidden** when there is no user position (BR-11, v0.3 D7); tapping the card opens the lot detail screen (SPEC-003, US-3.1). Out of scope here beyond navigation to route `/lot/:id`.
 - **AC9 (cap):** Given the RPC returns exactly 50 lots (the BR-2 maximum), then the hint "Showing nearest 50 — zoom in to see more" is shown. Exactly 50 lots in radius also shows the hint; this is accepted (Q-QA-14). *(Tech Lead decision — PO approves via PR)*
 - **AC10 (no location):** Given location is unavailable (US-1.1 AC3/AC4/AC5/AC9 without last-known), then lots are still loaded around the default centre.
 - **AC11 (outside service area, new — D4):** Given the current position (GPS or manual) is outside the service area, when a position-based search is triggered, then the search point is the default centre (BR-14), and card distances are still computed from the user's position (BR-11; may be large, e.g. "95.3 km").
@@ -116,12 +116,14 @@ Figma: _TBD — required before stories are Ready (DoR)._
 - **BR-10 No server-side location (PDPL):** user/manual coordinates are sent only as `nearby_lots` parameters via HTTP **POST** body (never in the URL/query string), rounded to 4 decimals (~11 m) *(assumption — PO to confirm)*, never written to any table, and never sent to analytics/Crashlytics.
 - **BR-11 Distance on card:** computed client-side (haversine) from the current position (BR-8), not from the search centre. **v0.3 (D7):** only a real user position counts — manual (US-1.3), GPS fix or last-known. With no user position (consent declined, permission denied/blocked, GPS off, timeout without last-known) the distance is **hidden**; the default centre is never used as a distance source.
 - **BR-12 Service area:** Vũng Tàu bounding box lat 10.30–10.45, lng 107.03–107.20 *(assumption — PO to confirm)*. Edges are **inclusive** (a point exactly on an edge is inside) (Q-QA-6, *Tech Lead decision — PO approves via PR*).
-- **BR-13 Tile attribution:** "© OpenStreetMap contributors" + tile provider credit must always be visible. Provider per ADR-0009: OpenFreeMap (vector) — exact credit text (e.g. "OpenFreeMap © OpenMapTiles Data from OpenStreetMap") to be confirmed in the Sprint 1 spike; text comes from tile config, not hard-coded.
+- **BR-13 Tile attribution (v0.4, D5):** the attribution must always be visible (bottom-left; never covered by card, banner or FAB) and is not translated. With OpenFreeMap (ADR-0009) the exact text is **"OpenFreeMap © OpenMapTiles Data from OpenStreetMap"** (source: openfreemap.org "Attribution", ADR-0009 spike §3). The text comes from the tile config (`TILE_ATTRIBUTION`, default = that text), never hard-coded in widgets; another provider brings its own required text in its config (e.g. "© OpenStreetMap contributors" for tile.openstreetmap.org in local dev).
 - **BR-14 Search point (D4):** for position-based triggers (BR-3 (a)–(c)) the search point is the current position (BR-8) if it is inside the service area, otherwise the default centre (BR-5). For "Search this area" it is the map centre (inside or outside the area).
 - **BR-15 Distance format (D3):** round the distance to the nearest 10 m first; if the rounded value is < 1000 m show metres (`"{m} m"`, e.g. "350 m", minimum "10 m"); otherwise km with one decimal (`"{km} km"`, e.g. "1.2 km"; 995 m → "1.0 km"). The decimal separator follows the locale: vi "1,2 km", en "1.2 km". *(locale separator: Tech Lead decision — PO approves via PR)*
+- **BR-16 Customer-only lots (v0.4, D2):** lots that OSM tags `access=customers` (parking for customers of a shop, hotel, restaurant …) are **kept and shown** like other lots (same pin style, BR-6), and their mini card shows the label `label_customers_only` ("Customers only") under the name. Stored as `parking_lots.customers_only boolean not null default false`; the OSM import (US-4.1) sets it to true for `access=customers` and false otherwise (`access=private`/`no` lots stay excluded). Owners/admins can change it later (SPEC-004). *(Tech Lead decision — PO approves via PR: label on the card only, no separate pin style)*
+- **BR-17 Map label language (v0.4):** place and street names drawn by the map style follow the app locale (§6): **vi** → the local name (OSM `name`); **en** → the English name (`name:en`) where OSM has one, otherwise the local name. Applied on the client when the vector style is loaded (no extra tiles, no extra requests); a locale change applies on the next map/style load. Raster tiles (local dev only) cannot be changed and are exempt. *(Tech Lead decision — PO approves via PR; from the ADR-0009 spike finding §8.3)*
 
 ## 5. Data & API
-**Table used (read-only):** `parking_lots` (id, name, location `geography(Point,4326)`, address, vehicle_types `text[]` ∈ {`motorbike`,`car`}, is_verified). No writes. No new tables.
+**Table used (read-only):** `parking_lots` (id, name, location `geography(Point,4326)`, address, vehicle_types `text[]` ∈ {`motorbike`,`car`}, is_verified, customers_only). No writes. No new tables. **v0.4:** new column `customers_only boolean not null default false` (BR-16) via a new migration; the RPC returns it (below); the US-4.1 import script sets it.
 E1 shows every row of `parking_lots`; there is no active/closed flag. If one is needed it is specified in SPEC-004 and the RPC gets a non-breaking filter then (spec §9 item 5). *(Tech Lead decision — PO approves via PR)*
 
 **Index**
@@ -139,7 +141,8 @@ create or replace function public.nearby_lots(
 ) returns table (
   id uuid, name text, address text,
   lot_lat double precision, lot_lng double precision,   -- not "lat/lng": output names must differ from input params
-  vehicle_types text[], is_verified boolean, distance_m integer
+  vehicle_types text[], is_verified boolean, customers_only boolean,   -- customers_only: v0.4, BR-16
+  distance_m integer
 )
 language sql stable security invoker
 set search_path = public, extensions
@@ -147,7 +150,7 @@ as $$
   with p as (select st_setsrid(st_makepoint(lng, lat), 4326)::geography as g)  -- note: lng first
   select l.id, l.name, l.address,
          st_y(l.location::geometry), st_x(l.location::geometry),
-         l.vehicle_types, l.is_verified,
+         l.vehicle_types, l.is_verified, l.customers_only,
          round(st_distance(l.location, p.g))::int as distance_m
   from public.parking_lots l, p
   where st_dwithin(l.location, p.g, least(greatest(radius_m, 100), 5000))
@@ -177,10 +180,10 @@ POST /rest/v1/rpc/nearby_lots
 [
   { "id": "5b1c…", "name": "Bãi giữ xe Quang Trung", "address": "Quang Trung, Vũng Tàu",
     "lot_lat": 10.3466, "lot_lng": 107.0752, "vehicle_types": ["motorbike","car"],
-    "is_verified": false, "distance_m": 145 },
+    "is_verified": false, "customers_only": false, "distance_m": 145 },
   { "id": "9e7a…", "name": "Bãi xe Bạch Dinh", "address": "Trần Phú, Vũng Tàu",
     "lot_lat": 10.3512, "lot_lng": 107.0701, "vehicle_types": ["car"],
-    "is_verified": false, "distance_m": 720 }
+    "is_verified": false, "customers_only": false, "distance_m": 720 }
 ]
 ```
 
@@ -226,6 +229,7 @@ POST /rest/v1/rpc/nearby_lots
 | hint_cap | Đang hiển thị {n} bãi gần nhất — phóng to để xem thêm | Showing nearest {n} — zoom in to see more | US-1.2 AC9 ({n} = 50) |
 | distance_m / distance_km | {m} m / {km} km | {m} m / {km} km | US-1.2 AC8, BR-15 |
 | vehicle_motorbike / vehicle_car | Xe máy / Ô tô | Motorbike / Car | US-1.2 AC8 card |
+| label_customers_only | Chỉ dành cho khách | Customers only | US-1.2 AC8 card, BR-16 (v0.4) |
 | banner_low_accuracy | Vị trí có thể chưa chính xác | Your location may be inaccurate | US-1.3 AC1 |
 | btn_adjust / btn_confirm / btn_cancel | Chỉnh vị trí / Xác nhận / Hủy | Adjust / Confirm / Cancel | US-1.3 |
 | menu_set_position | Đặt vị trí của tôi | Set my position | US-1.3 AC2 |
@@ -237,7 +241,7 @@ POST /rest/v1/rpc/nearby_lots
 | a11y_cluster | {count} bãi xe | {count} parking lots | cluster semantics |
 | a11y_manual_marker | Vị trí của bạn (đặt thủ công) | Your position (set manually) | US-1.3 AC3 |
 
-Not translated: tile attribution "© OpenStreetMap contributors" + provider credit (BR-13).
+Not translated: the tile attribution (BR-13). Map labels drawn by the style follow BR-17.
 
 **Analytics events (Firebase; collection off by default per NFR-6; never include coordinates or addresses)**
 `location_consent_shown`, `location_consent_result {result}`, `location_permission_result {status}`, `location_fix {accuracy_bucket, ttf_bucket}`, `nearby_lots_loaded {count, radius_m, trigger, duration_ms}`, `nearby_lots_empty {radius_m, trigger}`, `nearby_lots_error {error_type}`, `search_area_tapped`, `recenter_tapped`, `manual_position_set {trigger}`, `cluster_tapped`, `lot_pin_tapped {lot_id}`, `lot_card_opened {lot_id}`, `out_of_area_shown`, `banner_dismissed {banner}`.
@@ -316,6 +320,7 @@ Devices: per the test-strategy matrix (low-end Android, mid Android, iPhone Safa
 - **Q-B (new):** For Sprint 1, is the S1 minimal notice (`consent_body`) without a full privacy-policy link sufficient for the closed beta under PDPL, or must a short privacy page ship with US-1.4? (scope/legal — PO)
 - **Q-C (new):** Should an in-app "withdraw location consent" setting be added to E1 or stay in US-5.2? Today withdrawal is via OS/browser settings only (US-1.4 AC8). (scope — PO)
 - **Q-D (new):** Confirm the vi strings in §6 and the vi decimal comma in BR-15 ("1,2 km"). (D2 / A2)
+- **Q-E (v0.4):** Confirm the customer-only label wording (`label_customers_only`: vi "Chỉ dành cho khách", en "Customers only") and that it is shown on the card only, not as a separate pin style (BR-16). (D2 / A2)
 
 **Resolved questions (QA → resolution)**
 | Q-QA | Resolution | Where |
@@ -351,3 +356,4 @@ Devices: per the test-strategy matrix (low-end Android, mid Android, iPhone Safa
 | 0.2 | 2026-11-24 | Applied PO decisions D1–D6 (MTG-2026-11-24-po-decisions): new US-1.4 consent (D1, US-1.1 AC1 and TC-1.1.1 moved), full vi/en string table (D2), distance format BR-15 (D3), outside-area search point BR-14 (D4), radius reset per search (D5), dismissible low-accuracy banner (D6). All Q-QA-1–23 resolved: by PO decision Q-QA-1 (D1), 2 (D2), 15 (D3), 16 (D6), 6 and 10 in part (D4, D5); by Tech Lead decision (PO approves via PR) the rest; §9 items 5 and 6 resolved; new ACs US-1.1 AC12, US-1.2 AC11, US-1.3 AC8; NFR-3 split into 3a/3b; MP-7 added; open questions Q-B–Q-D added. Tile provider, analytics consent, defaults and Figma remain open. | Tech Lead |
 | 0.3 | 2026-11-25 | PO decision **D7** (review of PR #27): BR-11 / US-1.2 AC8 — card distance hidden when there is no user position (no longer measured from the default centre). TC-1.2.7 / 1.2.17 / 1.2.24 unchanged; QA to add a no-location card case. | PO / main agent (Tech Lead to review in PR #27) |
 | 0.3.1 | 2026-11-26 | US-1.1 AC5: blocked state remembered on the device, first "Enable" after relaunch opens settings (#32). US-1.1 AC6: declined Google "Location Accuracy" dialog is handled as AC9, not "location off" (#31). Found by the Android emulator QA run. | Tech Lead (main agent) |
+| 0.4 | 2026-11-28 | Task #17 (MTG-2026-11-24-po-decisions-2 A2): BR-13 exact OpenFreeMap attribution (D5); new BR-16 customer-only lots kept with a card label (D2) — new column `parking_lots.customers_only`, RPC output field, US-1.2 AC8 card label, key `label_customers_only`; new BR-17 map label language follows the app locale (spike §8.3). Implementation needs a new migration, an import-script change and app work (follow-up task). | Tech Lead (main agent) |
