@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'web_env.dart';
 
@@ -106,11 +107,16 @@ abstract interface class LocationService {
 /// (`geolocator_android`, `geolocator_web`, MIT). The umbrella `geolocator`
 /// package is intentionally not used (MPL-2.0 Linux dependency).
 class PlatformLocationService implements LocationService {
-  PlatformLocationService({GeolocatorPlatform? platform, bool? isWeb})
-      : _platformOverride = platform,
+  PlatformLocationService({
+    GeolocatorPlatform? platform,
+    bool? isWeb,
+    Future<SharedPreferences> Function()? prefs,
+  })  : _platformOverride = platform,
+        _prefs = prefs ?? SharedPreferences.getInstance,
         isWeb = isWeb ?? kIsWeb;
 
   final GeolocatorPlatform? _platformOverride;
+  final Future<SharedPreferences> Function() _prefs;
   GeolocatorPlatform get _platform =>
       _platformOverride ?? GeolocatorPlatform.instance;
 
@@ -155,7 +161,14 @@ class PlatformLocationService implements LocationService {
     try {
       // Web: Permissions API, used only as an optimisation (Q-QA-22);
       // `unableToDetermine` (not supported) maps to `unknown`.
-      return _map(await _platform.checkPermission());
+      final p = _map(await _platform.checkPermission());
+      if (isWeb) return p;
+      if (p == LocationPermissionStatus.granted) {
+        await _setBlocked(false);
+      } else if (p == LocationPermissionStatus.denied && await _isBlocked()) {
+        return LocationPermissionStatus.deniedForever; // AC5, issue #32
+      }
+      return p;
     } catch (e) {
       debugPrint('Location permission check failed: ${e.runtimeType}');
       return isWeb
@@ -167,14 +180,57 @@ class PlatformLocationService implements LocationService {
   @override
   Future<LocationPermissionStatus> requestPermission() async {
     if (isWeb) return _requestWeb();
+    final LocationPermissionStatus p;
     try {
-      final p = _map(await _platform.requestPermission());
-      return p == LocationPermissionStatus.unknown
+      final mapped = _map(await _platform.requestPermission());
+      p = mapped == LocationPermissionStatus.unknown
           ? LocationPermissionStatus.unavailable
-          : p;
+          : mapped;
     } catch (e) {
       debugPrint('Location permission request failed: ${e.runtimeType}');
       return LocationPermissionStatus.unavailable;
+    }
+    // AC5 / issue #32: remember "Don't ask again" across relaunches.
+    switch (p) {
+      case LocationPermissionStatus.deniedForever:
+        await _setBlocked(true);
+      case LocationPermissionStatus.granted:
+      case LocationPermissionStatus.denied:
+        await _setBlocked(false);
+      case LocationPermissionStatus.unavailable:
+      case LocationPermissionStatus.unknown:
+        break;
+    }
+    return p;
+  }
+
+  /// Android's `checkPermission` cannot tell "Don't ask again" from
+  /// "denied" (it reports `denied` for both); only a request result can.
+  /// The last request result `deniedForever` is therefore stored on the
+  /// device (a flag only, no location data) so that a relaunch starts in
+  /// the blocked state and the first "Enable" opens the app settings
+  /// (US-1.1 AC5, issue #32).
+  static const blockedKey = 'location_permission.blocked';
+
+  Future<bool> _isBlocked() async {
+    try {
+      return (await _prefs()).getBool(blockedKey) ?? false;
+    } catch (e) {
+      debugPrint('Permission flag unavailable: ${e.runtimeType}');
+      return false;
+    }
+  }
+
+  Future<void> _setBlocked(bool blocked) async {
+    try {
+      final prefs = await _prefs();
+      if (blocked) {
+        await prefs.setBool(blockedKey, true);
+      } else if (prefs.containsKey(blockedKey)) {
+        await prefs.remove(blockedKey);
+      }
+    } catch (e) {
+      debugPrint('Permission flag not saved: ${e.runtimeType}');
     }
   }
 
