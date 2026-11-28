@@ -389,6 +389,16 @@ void main() {
     expect(find.byKey(const ValueKey('consent-allow')), findsOneWidget);
     expect(find.byKey(_toast), findsNothing);
     expect(service.totalCalls, 0);
+
+    // QA BUG-1 (2026-11-28): "Not now" must return to the same map with the
+    // manual position kept — no new request, no location call.
+    final searchesBefore = _searches.length;
+    await tester.tap(find.byKey(const ValueKey('consent-not-now')));
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('consent-allow')), findsNothing);
+    expect(find.byKey(_manualMarker), findsOneWidget);
+    expect(_searches.length, searchesBefore);
+    expect(service.totalCalls, 0);
   });
 
   testWidgets('AC6 / TC-1.3.5: permission denied → manual position via the '
