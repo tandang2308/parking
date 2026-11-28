@@ -21,7 +21,7 @@ import 'helpers/fakes.dart';
 /// ignored / back to GPS (AC4), cancel (AC5), no GPS needed (AC6), memory
 /// only (AC7), outside area (AC8), §6 strings vi/en, NFR-8.
 
-Future<vt.Style> _pendingStyle(String _) => Completer<vt.Style>().future;
+Future<vt.Style> _pendingStyle(String _, String _) => Completer<vt.Style>().future;
 
 const _fab = ValueKey('fab-my-location');
 const _dot = ValueKey('user-location-dot');

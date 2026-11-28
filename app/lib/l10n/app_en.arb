@@ -145,6 +145,10 @@
   "@vehicle_car": {
     "description": "SPEC-001 §6, US-1.2 AC8 card."
   },
+  "label_customers_only": "Customers only",
+  "@label_customers_only": {
+    "description": "SPEC-001 §6, BR-16, US-1.2 AC8 card: shown under the name of a customer-only lot (OSM access=customers)."
+  },
   "a11y_pin": "{name}, {types}",
   "@a11y_pin": {
     "description": "SPEC-001 §6, NFR-8: lot pin semantics.",

@@ -111,6 +111,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get vehicle_car => 'Ô tô';
 
   @override
+  String get label_customers_only => 'Chỉ dành cho khách';
+
+  @override
   String a11y_pin(String name, String types) {
     return '$name, $types';
   }

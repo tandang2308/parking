@@ -264,7 +264,24 @@ void main() {
       expect(lot.position, const LatLng(10.3466, 107.0752));
       expect(lot.pinKind, PinKind.both);
       expect(lot.distanceM, 145);
+      expect(lot.customersOnly, isFalse);
       expect(() => ParkingLot.fromRpc({'id': 1}), throwsFormatException);
+    });
+
+    test('BR-16: fromRpc parses customers_only; missing or null is false',
+        () {
+      ParkingLot parse(Map<String, dynamic> extra) => ParkingLot.fromRpc({
+            'id': 'c1',
+            'name': 'Khách sạn',
+            'lot_lat': 10.3466,
+            'lot_lng': 107.0752,
+            'vehicle_types': ['car'],
+            ...extra,
+          });
+      expect(parse({'customers_only': true}).customersOnly, isTrue);
+      expect(parse({'customers_only': false}).customersOnly, isFalse);
+      expect(parse({'customers_only': null}).customersOnly, isFalse);
+      expect(parse({}).customersOnly, isFalse);
     });
   });
 

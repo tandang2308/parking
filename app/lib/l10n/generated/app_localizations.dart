@@ -278,6 +278,12 @@ abstract class AppLocalizations {
   /// **'Car'**
   String get vehicle_car;
 
+  /// SPEC-001 §6, BR-16, US-1.2 AC8 card: shown under the name of a customer-only lot (OSM access=customers).
+  ///
+  /// In en, this message translates to:
+  /// **'Customers only'**
+  String get label_customers_only;
+
   /// SPEC-001 §6, NFR-8: lot pin semantics.
   ///
   /// In en, this message translates to:

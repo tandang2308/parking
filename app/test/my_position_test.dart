@@ -17,7 +17,7 @@ import 'helpers/fakes.dart';
 /// SPEC-001 US-1.1 widget tests (TC-1.1.2–1.1.16, 1.1.19 partial,
 /// 1.1.24, 1.1.25, 1.1.26–1.1.31 automated parts).
 
-Future<vt.Style> _pendingStyle(String _) => Completer<vt.Style>().future;
+Future<vt.Style> _pendingStyle(String _, String _) => Completer<vt.Style>().future;
 
 const _dot = ValueKey('user-location-dot');
 const _fab = ValueKey('fab-my-location');
