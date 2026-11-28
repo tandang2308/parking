@@ -44,6 +44,7 @@ Future<void> _pumpApp(
       styleLoader: styleLoader,
       consentStore: FakeConsentStore(consentRecord(ConsentResult.granted)),
       locationService: FakeLocationService(),
+      lotsRepository: FakeLotsRepository(),
     ),
   );
   await tester.pump(); // consent record loaded

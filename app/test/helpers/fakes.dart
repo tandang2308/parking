@@ -4,6 +4,87 @@ import 'package:latlong2/latlong.dart';
 import 'package:parkfinder/features/consent/consent_record.dart';
 import 'package:parkfinder/features/consent/consent_store.dart';
 import 'package:parkfinder/features/location/location_service.dart';
+import 'package:parkfinder/features/lots/connectivity_monitor.dart';
+import 'package:parkfinder/features/lots/lots_repository.dart';
+import 'package:parkfinder/features/lots/parking_lot.dart';
+
+/// Scriptable [LotsRepository] (no network in tests). Records every call.
+///
+/// By default every call returns [lots] at once. With [hold] = true calls
+/// wait until [complete] / [fail] is called for them (in-flight tests).
+class FakeLotsRepository implements LotsRepository {
+  FakeLotsRepository({this.lots = const [], this.error, this.hold = false});
+
+  List<ParkingLot> lots;
+
+  /// If set, every (non-held) call throws it.
+  Object? error;
+  bool hold;
+
+  final List<({LatLng point, int radiusM})> calls = [];
+  final List<Completer<List<ParkingLot>>> _pending = [];
+
+  int get pendingCount => _pending.where((c) => !c.isCompleted).length;
+
+  @override
+  Future<List<ParkingLot>> nearbyLots({
+    required LatLng point,
+    required int radiusM,
+  }) {
+    calls.add((point: point, radiusM: radiusM));
+    if (hold) {
+      final c = Completer<List<ParkingLot>>();
+      _pending.add(c);
+      return c.future;
+    }
+    if (error != null) return Future.error(error!);
+    return Future.value(lots);
+  }
+
+  /// Completes the [index]-th held call (default: the oldest pending one).
+  void complete(List<ParkingLot> result, {int? index}) {
+    final c = index != null
+        ? _pending[index]
+        : _pending.firstWhere((c) => !c.isCompleted);
+    c.complete(result);
+  }
+
+  void fail({int? index, Object error = const LotsLoadException('test')}) {
+    final c = index != null
+        ? _pending[index]
+        : _pending.firstWhere((c) => !c.isCompleted);
+    c.completeError(error);
+  }
+}
+
+/// [ConnectivityMonitor] whose offline → online events are fired by tests.
+class FakeConnectivityMonitor implements ConnectivityMonitor {
+  final StreamController<void> _controller = StreamController<void>.broadcast();
+
+  void reconnect() => _controller.add(null);
+
+  @override
+  Stream<void> get onReconnected => _controller.stream;
+
+  @override
+  void dispose() => _controller.close();
+}
+
+/// A lot for tests (SPEC-001 §5 row).
+ParkingLot lotAt(
+  String id,
+  double lat,
+  double lng, {
+  Set<VehicleType> types = const {VehicleType.motorbike, VehicleType.car},
+  String? name,
+}) =>
+    ParkingLot(
+      id: id,
+      name: name ?? 'Lot $id',
+      address: 'Address $id',
+      position: LatLng(lat, lng),
+      vehicleTypes: types,
+    );
 
 /// In-memory [ConsentStore]; survives "relaunches" when the same instance is
 /// passed to a new app widget.

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -8,18 +9,30 @@ import '../../config/tile_config.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../location/location_controller.dart';
 import '../location/location_service.dart';
+import '../lots/connectivity_monitor.dart';
+import '../lots/lot_card.dart';
+import '../lots/lot_clustering.dart';
+import '../lots/lot_pins_layer.dart';
+import '../lots/lot_placeholder_screen.dart';
+import '../lots/lots_controller.dart';
+import '../lots/lots_geo.dart';
+import '../lots/lots_repository.dart';
+import '../lots/parking_lot.dart';
 import 'base_tile_layer.dart';
 import 'map_attribution.dart';
 import 'map_banner.dart';
 import 'map_constants.dart';
 
 /// S2 map screen (SPEC-001 §3): full-screen map, blue dot + accuracy circle,
-/// "My location" FAB, one banner at the top (US-1.1).
+/// "My location" FAB, one banner at the top (US-1.1), lot pins, clusters,
+/// "Search this area" chip and the lot mini card (US-1.2).
 class MapScreen extends StatefulWidget {
   const MapScreen({
     super.key,
     required this.tileConfig,
     required this.session,
+    required this.lotsRepository,
+    this.connectivity,
     this.styleLoader = loadStyleFromNetwork,
     this.locationService,
     this.requestPermissionOnStart = false,
@@ -35,6 +48,12 @@ class MapScreen extends StatefulWidget {
   final StyleLoader styleLoader;
   final MapSession session;
 
+  /// `nearby_lots` source (US-1.2).
+  final LotsRepository lotsRepository;
+
+  /// Offline → online events for the single auto retry (US-1.2 AC5).
+  final ConnectivityMonitor? connectivity;
+
   /// `null` when location consent is not granted (BR-9, D3): then no
   /// location API is called and `banner_location_needed` reopens S1.
   final LocationService? locationService;
@@ -45,7 +64,8 @@ class MapScreen extends StatefulWidget {
   /// "Enable" after a declined consent (US-1.1 AC3).
   final VoidCallback? onReopenConsent;
 
-  /// BR-3 (a)/(b) search hook for US-1.2 (US-1.1 AC8).
+  /// Observer of the BR-3 (a)/(b) search triggers (tests). Lots are loaded
+  /// by the screen's own lots controller.
   final SearchCentreCallback? onSearchCentreChanged;
 
   /// "Adjust" on `banner_no_fix` — TODO(US-1.3): start adjust mode.
@@ -63,6 +83,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen>
     with SingleTickerProviderStateMixin {
   late final MapController _map = widget.mapController ?? MapController();
+  late final LotsController _lots;
   late final LocationController _location;
   late final AppLifecycleListener _lifecycle;
   late final AnimationController _camera;
@@ -74,6 +95,10 @@ class _MapScreenState extends State<MapScreen>
   bool _mapReady = false;
   ({LatLng centre, double? zoom})? _pendingMove;
 
+  /// AC7: key of the spiderfied cluster, or `null`.
+  String? _spiderKey;
+  List<ParkingLot> _shownLots = const [];
+
   static const Duration cameraAnimationDuration = Duration(milliseconds: 400);
 
   @override
@@ -82,11 +107,19 @@ class _MapScreenState extends State<MapScreen>
     _camera = AnimationController(vsync: this, duration: cameraAnimationDuration)
       ..addListener(_onCameraTick);
     _cameraCurve = CurvedAnimation(parent: _camera, curve: Curves.easeInOut);
+    _lots = LotsController(
+      repository: widget.lotsRepository,
+      connectivity: widget.connectivity,
+    )..addListener(_onLotsChanged);
     _location = LocationController(
       service: widget.locationService,
       session: widget.session,
       moveCamera: _moveCamera,
-      onSearchCentreChanged: widget.onSearchCentreChanged,
+      // BR-3 (a)/(b) → US-1.2 AC1 (point already per BR-14).
+      onSearchCentreChanged: (point, trigger) {
+        widget.onSearchCentreChanged?.call(point, trigger);
+        _lots.onSearchTrigger(point, trigger);
+      },
       onReopenConsent: widget.onReopenConsent,
       onShowUnblockGuide: _showUnblockGuide,
       onAdjustRequested: widget.onAdjustRequested,
@@ -110,6 +143,9 @@ class _MapScreenState extends State<MapScreen>
     _location
       ..removeListener(_onLocationChanged)
       ..dispose();
+    _lots
+      ..removeListener(_onLotsChanged)
+      ..dispose();
     _camera.dispose();
     super.dispose();
   }
@@ -118,12 +154,30 @@ class _MapScreenState extends State<MapScreen>
     if (mounted) setState(() {});
   }
 
+  void _onLotsChanged() {
+    if (!mounted) return;
+    // Camera events can arrive during layout (e.g. a resize): rebuild after
+    // the frame instead of calling setState mid-build.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _onLotsChanged());
+      return;
+    }
+    setState(() {
+      if (!identical(_shownLots, _lots.lots)) {
+        _shownLots = _lots.lots;
+        _spiderKey = null;
+      }
+    });
+  }
+
   void _showUnblockGuide() {
     if (mounted) unawaited(showWebUnblockGuide(context));
   }
 
   void _onMapReady() {
     _mapReady = true;
+    _lots.onCameraChanged(_map.camera, hasGesture: false);
     final pending = _pendingMove;
     _pendingMove = null;
     if (pending != null) _moveCamera(pending.centre, pending.zoom);
@@ -157,17 +211,64 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _onPositionChanged(MapCamera camera, bool hasGesture) {
+    // AC6: only updates the "Search this area" chip, never loads.
+    _lots.onCameraChanged(camera, hasGesture: hasGesture);
+    if (_spiderKey != null &&
+        (hasGesture || camera.zoom < widget.tileConfig.maxZoom - 0.01)) {
+      _spiderKey = null;
+      _onLotsChanged(); // frame-safe rebuild
+    }
     if (!hasGesture) return;
     // AC7: panning by the user turns follow mode off.
     _camera.stop();
     _location.onUserGesture();
   }
 
+  /// US-1.2 AC7: zoom in until the pins separate; at max zoom spiderfy.
+  void _onClusterTap(LotCluster cluster, MapCamera camera) {
+    final maxZoom = widget.tileConfig.maxZoom;
+    if (camera.zoom >= maxZoom - 0.01) {
+      setState(() => _spiderKey = cluster.key);
+      return;
+    }
+    final target = LotClustering.zoomTarget(cluster, camera, maxZoom: maxZoom);
+    // A user-initiated zoom: follow mode off; the chip may appear.
+    _lots.onUserZoom();
+    _location.onUserGesture();
+    _moveCamera(target.centre, target.zoom);
+  }
+
+  void _onMapTap(TapPosition _, LatLng _) {
+    _lots.select(null);
+    if (_spiderKey != null) setState(() => _spiderKey = null);
+  }
+
+  /// AC8: card tap → `/lot/:id` (US-3.1 builds the real screen).
+  void _openLot(ParkingLot lot) {
+    unawaited(Navigator.of(context).pushNamed(
+      LotPlaceholderScreen.routeFor(lot.id),
+      arguments: lot,
+    ));
+  }
+
+  /// SPEC-001 §3 single banner: `error_load` first, then the location
+  /// banners in their own priority (US-1.1).
+  MapBannerKind? get _bannerKind =>
+      _lots.hasError ? MapBannerKind.loadError : _location.banner;
+
+  /// BR-11: the user's position (GPS fix or last-known), or `null` when
+  /// there is none (declined, denied/blocked, GPS off, timeout without
+  /// last-known). The default centre is never a distance source (PO
+  /// decision on PR #27): the card then hides the distance.
+  /// TODO(US-1.3): a manual position takes precedence.
+  LatLng? get _userPosition => _location.userFix?.position;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final fix = _location.userFix;
-    final bannerKind = _location.banner;
+    final bannerKind = _bannerKind;
+    final selected = _lots.selectedLot;
 
     return Scaffold(
       body: Stack(
@@ -181,13 +282,14 @@ class _MapScreenState extends State<MapScreen>
               maxZoom: widget.tileConfig.maxZoom,
               onMapReady: _onMapReady,
               onPositionChanged: _onPositionChanged,
+              onTap: _onMapTap,
             ),
             children: [
               buildBaseTileLayer(
                 widget.tileConfig,
                 styleLoader: widget.styleLoader,
               ),
-              if (fix != null) ...[
+              if (fix != null)
                 // AC2: accuracy circle, radius = reported accuracy.
                 CircleLayer(
                   key: const ValueKey('user-accuracy-circle'),
@@ -202,6 +304,16 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
+              // US-1.2 AC2, AC7, AC8.
+              LotPinsLayer(
+                key: const ValueKey('lot-pins-layer'),
+                lots: _lots.lots,
+                selectedId: selected?.id,
+                spiderfiedKey: _spiderKey,
+                onLotTap: _lots.select,
+                onClusterTap: _onClusterTap,
+              ),
+              if (fix != null)
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -212,7 +324,6 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ],
                 ),
-              ],
               // SPEC-001 BR-13: attribution always visible, text from config.
               MapAttribution(
                 key: const ValueKey('map-attribution'),
@@ -229,7 +340,39 @@ class _MapScreenState extends State<MapScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (bannerKind != null)
-                      buildLocationBanner(context, bannerKind, _location),
+                      buildLocationBanner(
+                        context,
+                        bannerKind,
+                        _location,
+                        onRetry: _lots.retry,
+                      ),
+                    ..._buildEmptyState(l10n),
+                    if (_lots.showSearchArea)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: ActionChip(
+                          key: const ValueKey('chip-search-area'),
+                          avatar: const Icon(Icons.search),
+                          label: Text(l10n.btn_search_area),
+                          onPressed: _lots.searchThisArea,
+                        ),
+                      ),
+                    if (_lots.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: _LoadingChip(key: ValueKey('lots-loading')),
+                      ),
+                    if (_lots.showCapHint)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Chip(
+                          key: const ValueKey('hint-cap'),
+                          label: Text(
+                            l10n.hint_cap(LotsRepository.maxLots),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                     if (_location.showLocatingHint)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -247,6 +390,36 @@ class _MapScreenState extends State<MapScreen>
               ),
             ),
           ),
+          // US-1.2 AC8 mini card: bottom, left of the FAB and above the
+          // attribution (BR-13: never covered).
+          if (selected != null)
+            Positioned(
+              left: 8,
+              right: 84,
+              bottom: 48,
+              child: SafeArea(
+                // Wide screens (Web/tablet): keep the card compact so the
+                // distance stays next to the name.
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: LotMiniCard.maxWidth,
+                    ),
+                    child: LotMiniCard(
+                      key: ValueKey('lot-card-${selected.id}'),
+                      lot: selected,
+                      distanceMetres: switch (_userPosition) {
+                        final LatLng user =>
+                          haversineMetres(user, selected.position),
+                        null => null,
+                      },
+                      onTap: () => _openLot(selected),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           // "My location" FAB above the attribution (BR-13: never covered).
           Positioned(
             right: 16,
@@ -265,6 +438,56 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// US-1.2 AC4 empty states (below the single banner).
+  List<Widget> _buildEmptyState(AppLocalizations l10n) {
+    final empty = _lots.emptyState;
+    if (empty == null) return const [];
+    final Widget panel = switch (empty) {
+      LotsEmptyState.radius => MapBanner(
+          key: const ValueKey('empty-radius'),
+          icon: Icons.search_off,
+          text: l10n.empty_radius(LotsController.defaultRadiusM ~/ 1000),
+          actionKey: const ValueKey('btn-expand'),
+          actionLabel: l10n.btn_expand(LotsController.expandedRadiusM ~/ 1000),
+          onAction: _lots.expand,
+        ),
+      LotsEmptyState.none => MapBanner(
+          key: const ValueKey('empty-none'),
+          icon: Icons.search_off,
+          text: l10n.empty_none,
+        ),
+      LotsEmptyState.area => MapBanner(
+          key: const ValueKey('empty-area'),
+          icon: Icons.search_off,
+          text: l10n.empty_area,
+        ),
+    };
+    return [
+      Padding(padding: const EdgeInsets.only(top: 8), child: panel),
+    ];
+  }
+}
+
+/// US-1.2 AC3: non-blocking progress chip (the map stays usable).
+class _LoadingChip extends StatelessWidget {
+  const _LoadingChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 2,
+      shape: const StadiumBorder(),
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: const Padding(
+        padding: EdgeInsets.all(8),
+        child: SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       ),
     );
   }

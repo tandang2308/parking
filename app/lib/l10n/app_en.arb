@@ -71,5 +71,99 @@
   "a11y_my_location": "My location",
   "@a11y_my_location": {
     "description": "SPEC-001 §6, NFR-8, US-1.1 AC8: label of the \"My location\" button."
+  },
+  "btn_search_area": "Search this area",
+  "@btn_search_area": {
+    "description": "SPEC-001 §6, US-1.2 AC6: chip that loads lots around the map centre."
+  },
+  "empty_radius": "No parking lots within {km} km",
+  "@empty_radius": {
+    "description": "SPEC-001 §6, US-1.2 AC4: empty state of a position-based search at 1 km.",
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "btn_expand": "Expand to {km} km",
+  "@btn_expand": {
+    "description": "SPEC-001 §6, US-1.2 AC4: repeats the current search at 3 km.",
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "empty_none": "No parking lots found nearby yet",
+  "@empty_none": {
+    "description": "SPEC-001 §6, US-1.2 AC4: still empty after expanding."
+  },
+  "empty_area": "No parking lots in this area",
+  "@empty_area": {
+    "description": "SPEC-001 §6, US-1.2 AC4: \"Search this area\" returned 0 lots."
+  },
+  "error_load": "Can't load parking lots",
+  "@error_load": {
+    "description": "SPEC-001 §6, US-1.2 AC5: error/offline banner."
+  },
+  "btn_retry": "Retry",
+  "@btn_retry": {
+    "description": "SPEC-001 §6, US-1.2 AC5: repeats the last request."
+  },
+  "hint_cap": "Showing nearest {n} — zoom in to see more",
+  "@hint_cap": {
+    "description": "SPEC-001 §6, US-1.2 AC9 ({n} = 50).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "distance_m": "{m} m",
+  "@distance_m": {
+    "description": "SPEC-001 §6, BR-15: distance below 1000 m (rounded to 10 m).",
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "distance_km": "{km} km",
+  "@distance_km": {
+    "description": "SPEC-001 §6, BR-15: distance in km, one decimal, already formatted with the locale decimal separator.",
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicle_motorbike": "Motorbike",
+  "@vehicle_motorbike": {
+    "description": "SPEC-001 §6, US-1.2 AC8 card."
+  },
+  "vehicle_car": "Car",
+  "@vehicle_car": {
+    "description": "SPEC-001 §6, US-1.2 AC8 card."
+  },
+  "a11y_pin": "{name}, {types}",
+  "@a11y_pin": {
+    "description": "SPEC-001 §6, NFR-8: lot pin semantics.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "types": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_cluster": "{count} parking lots",
+  "@a11y_cluster": {
+    "description": "SPEC-001 §6, NFR-8: cluster semantics.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

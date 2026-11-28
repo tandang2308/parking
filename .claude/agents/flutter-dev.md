@@ -17,7 +17,7 @@ You are the Flutter developer of ParkFinder Vung Tau (Android + Web, Flutter, `f
 
 ## Hard limits
 - Do not change specs, ADRs or migrations — if the spec is unclear or wrong, stop and report it as an open question.
-- No new paid services; new packages must be free and MIT/BSD/Apache-licensed (no GPL) — list each added package in the report.
+- No new paid services; every package in `pubspec.lock` (direct and transitive, all platforms) must be MIT/BSD/Apache-2.0/ISC/zlib licensed — no GPL, LGPL, MPL or other copyleft (ADR-0012). List each added package and its licence in the report.
 - Location: foreground only, never sent anywhere except `nearby_lots` params (PDPL, SPEC-001 BR-10). No coordinates in logs/analytics.
 - Do not commit or push; leave changes for review.
 

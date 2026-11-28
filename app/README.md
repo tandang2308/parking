@@ -2,7 +2,8 @@
 
 Flutter client for ParkFinder Vũng Tàu. Current state: app skeleton + map tile spike
 (ADR-0009 validation gate, see `docs/03-architecture/spikes/ADR-0009-tile-spike.md`) +
-location consent screen S1 and vi/en localisation (US-1.4).
+location consent screen S1 and vi/en localisation (US-1.4) + my position on the map (US-1.1) +
+nearby parking lots as pins (US-1.2).
 
 Requires Flutter 3.38.x stable. All commands run from this `app/` folder.
 
@@ -32,6 +33,45 @@ flutter run -d chrome --dart-define=TILE_RENDERER=raster \
   "--dart-define=TILE_ATTRIBUTION=© OpenStreetMap contributors"
 ```
 No API keys are needed for the default provider. Never put secrets in `--dart-define` values.
+
+## Supabase / nearby lots (US-1.2, SPEC-001 §5)
+Lots come (via the pure-Dart `supabase` client, MIT — ADR-0012) from the Supabase RPC `nearby_lots` (`POST /rest/v1/rpc/nearby_lots`, coordinates in the
+body only, rounded to 4 decimals, BR-10). Connection settings are passed with `--dart-define`:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `SUPABASE_URL` | _(empty)_ | Project URL, e.g. `https://<project-ref>.supabase.co` (local stack: `http://127.0.0.1:55321`) |
+| `SUPABASE_ANON_KEY` | _(empty)_ | The public **anon** key only — never the service-role key |
+
+If either value is missing the app still starts; every lot load then fails and the
+"Can't load parking lots" banner is shown. Never commit the values (no keys in code, `.env` or docs).
+
+**Recommended: a settings file outside the repo.** Long commands pasted into the terminal often break
+across lines and silently drop the `--dart-define`s (the console then logs
+`Supabase not configured`). Create `D:\Projects\parking-local\supabase.json` (any path **outside** the
+repo, so it can never be committed):
+```json
+{ "SUPABASE_URL": "https://<project-ref>.supabase.co", "SUPABASE_ANON_KEY": "<anon key>" }
+```
+Get the anon key in the Supabase dashboard → Project Settings → API Keys (`anon` / publishable key).
+Then run (PowerShell, Web):
+```powershell
+flutter run -d web-server --web-port 8080 --dart-define-from-file=D:\Projects\parking-local\supabase.json
+```
+Alternative without a file:
+```powershell
+flutter run -d web-server --web-port 8080 "--dart-define=SUPABASE_URL=https://<project-ref>.supabase.co" "--dart-define=SUPABASE_ANON_KEY=<anon key>"
+```
+The same flags (`--dart-define-from-file` or `--dart-define`) work for `flutter build web --release`
+and `flutter build apk`.
+
+Behaviour notes: lots load only on the BR-3 triggers (first position, "My location", "Search this
+area", Retry/Expand, and one automatic retry when the connection comes back — Web: browser `online`
+event, Android: own `EventChannel` `vn.parkfinder/connectivity` in `MainActivity.kt`, no plugin — ADR-0012). Pan/zoom never loads. Clustering (BR-4) is implemented in
+`lib/features/lots/lot_clustering.dart` (`flutter_map_marker_cluster` 8.2.2 requires
+`latlong2 ^0.9.1`, the app uses `^0.10.1`). Tapping the mini card opens `/lot/:id`, a placeholder
+until US-3.1. Debug/profile builds log `nearby_lots loaded count=… radius_m=… duration_ms=…`
+(NFR-1 timer, never coordinates).
 
 ## Location consent (US-1.4, SPEC-001)
 The consent screen S1 is shown before the map on first launch. The answer (`granted` /
