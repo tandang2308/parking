@@ -10,7 +10,7 @@ Claude Code sub-agents defined in `.claude/agents/`. They **assist** the human t
 |---|---|---|---|---|
 | `tech-lead` | Specs, ADRs, design reviews | `docs/` | Read, Grep, Glob, Write, Edit | No app code; scope = PO's decision |
 | `supabase-dev` | Migrations, RLS, RPC, pgTAP tests, imports | `supabase/` | + Bash | Local DB only; never `--remote` / cloud |
-| `flutter-dev` | Implement stories from specs + tests | app code | + Bash | Never changes specs; free, non-GPL packages only |
+| `flutter-dev` | Implement stories from specs + tests | app code | + Bash | Never changes specs; permissive-licence packages only (ADR-0012) |
 | `qa-engineer` | Test cases, reviews vs ACs, bug reports | `docs/06-qa/` | Read, Grep, Glob, Write, Edit | Never fixes code |
 | `qa-tester` | Runs manual test cases on the Android emulator (adb) and Web; test run reports (ADR-0013) | `docs/06-qa/test-runs/` | + Bash | Never fixes code; no commits, no cloud |
 | `scrum-master` | Minutes, sprint docs, backlog consistency | `docs/` | Read, Grep, Glob, Write, Edit | Never invents decisions |

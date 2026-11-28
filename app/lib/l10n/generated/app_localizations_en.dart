@@ -63,4 +63,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get a11y_my_location => 'My location';
+
+  @override
+  String get btn_search_area => 'Search this area';
+
+  @override
+  String empty_radius(int km) {
+    return 'No parking lots within $km km';
+  }
+
+  @override
+  String btn_expand(int km) {
+    return 'Expand to $km km';
+  }
+
+  @override
+  String get empty_none => 'No parking lots found nearby yet';
+
+  @override
+  String get empty_area => 'No parking lots in this area';
+
+  @override
+  String get error_load => 'Can\'t load parking lots';
+
+  @override
+  String get btn_retry => 'Retry';
+
+  @override
+  String hint_cap(int n) {
+    return 'Showing nearest $n — zoom in to see more';
+  }
+
+  @override
+  String distance_m(int m) {
+    return '$m m';
+  }
+
+  @override
+  String distance_km(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get vehicle_motorbike => 'Motorbike';
+
+  @override
+  String get vehicle_car => 'Car';
+
+  @override
+  String a11y_pin(String name, String types) {
+    return '$name, $types';
+  }
+
+  @override
+  String a11y_cluster(int count) {
+    return '$count parking lots';
+  }
 }

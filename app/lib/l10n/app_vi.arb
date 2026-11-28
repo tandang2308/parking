@@ -17,5 +17,19 @@
   "out_of_area": "Hiện ParkFinder chỉ hỗ trợ Vũng Tàu",
   "btn_go_vung_tau": "Đến Vũng Tàu",
   "a11y_dismiss": "Đóng",
-  "a11y_my_location": "Vị trí của tôi"
+  "a11y_my_location": "Vị trí của tôi",
+  "btn_search_area": "Tìm trong khu vực này",
+  "empty_radius": "Không có bãi xe trong bán kính {km} km",
+  "btn_expand": "Mở rộng đến {km} km",
+  "empty_none": "Chưa tìm thấy bãi xe nào gần đây",
+  "empty_area": "Không có bãi xe trong khu vực này",
+  "error_load": "Không tải được bãi xe",
+  "btn_retry": "Thử lại",
+  "hint_cap": "Đang hiển thị {n} bãi gần nhất — phóng to để xem thêm",
+  "distance_m": "{m} m",
+  "distance_km": "{km} km",
+  "vehicle_motorbike": "Xe máy",
+  "vehicle_car": "Ô tô",
+  "a11y_pin": "{name}, {types}",
+  "a11y_cluster": "{count} bãi xe"
 }

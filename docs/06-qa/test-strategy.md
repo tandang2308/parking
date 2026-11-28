@@ -8,7 +8,7 @@
 |---|---|---|
 | Unit / widget tests | Devs | `flutter test`, run in GitHub Actions on every PR |
 | Database / RLS tests | Devs | SQL tests against Supabase local (`supabase start`) |
-| Manual functional | QA | Test cases `TC-x.y.z` per story |
+| Manual functional | QA | Test cases `TC-x.y.z` per story; each run is reported in `test-runs/<yyyy-mm-dd>-US-x.y-<platform>.md` |
 | Location tests | QA | Mock GPS (Android dev options / emulator) for fixed Vũng Tàu points |
 | Field test | QA + team | On-site in Vũng Tàu before beta (Sprint 4) — report in `field-tests/` |
 

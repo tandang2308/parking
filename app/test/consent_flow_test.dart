@@ -60,6 +60,7 @@ Future<void> _launch(
       styleLoader: _pendingStyle,
       consentStore: store,
       locationService: permissions,
+      lotsRepository: FakeLotsRepository(),
       consentVersion: consentVersion,
     ),
   );
