@@ -3,23 +3,26 @@ import 'package:flutter/material.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../location/location_controller.dart';
 
-/// Top-of-map banner (SPEC-001 §3: max one shown at a time).
+/// Top-of-map banner (SPEC-001 §3: max one shown at a time). Also used for
+/// the US-1.2 AC4 empty-state messages below it.
 class MapBanner extends StatelessWidget {
   const MapBanner({
     super.key,
     required this.icon,
     required this.text,
-    required this.actionKey,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionKey,
+    this.actionLabel,
+    this.onAction,
     this.onDismiss,
   });
 
   final IconData icon;
   final String text;
-  final Key actionKey;
-  final String actionLabel;
-  final VoidCallback onAction;
+
+  /// Optional action (e.g. `empty_none` has none, US-1.2 AC4).
+  final Key? actionKey;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   /// Close (×) action, labelled `a11y_dismiss` (US-1.1 AC10).
   final VoidCallback? onDismiss;
@@ -32,6 +35,7 @@ class MapBanner extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final onDismiss = this.onDismiss;
+    final actionLabel = this.actionLabel;
 
     return Material(
       elevation: 2,
@@ -57,12 +61,13 @@ class MapBanner extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(text, style: theme.textTheme.bodyMedium),
                   ),
-                  TextButton(
-                    key: actionKey,
-                    style: TextButton.styleFrom(minimumSize: minTouchTarget),
-                    onPressed: onAction,
-                    child: Text(actionLabel, textAlign: TextAlign.center),
-                  ),
+                  if (actionLabel != null)
+                    TextButton(
+                      key: actionKey,
+                      style: TextButton.styleFrom(minimumSize: minTouchTarget),
+                      onPressed: onAction,
+                      child: Text(actionLabel, textAlign: TextAlign.center),
+                    ),
                 ],
               ),
             ),
@@ -81,14 +86,25 @@ class MapBanner extends StatelessWidget {
   }
 }
 
-/// Builds the banner for [kind] wired to [controller] (US-1.1 AC3–AC10).
+/// Builds the banner for [kind] wired to [controller] (US-1.1 AC3–AC10), or
+/// to [onRetry] for `error_load` (US-1.2 AC5).
 Widget buildLocationBanner(
   BuildContext context,
   MapBannerKind kind,
-  LocationController controller,
-) {
+  LocationController controller, {
+  VoidCallback? onRetry,
+}) {
   final l10n = AppLocalizations.of(context);
   switch (kind) {
+    case MapBannerKind.loadError:
+      return MapBanner(
+        key: const ValueKey('banner-load-error'),
+        icon: Icons.cloud_off_outlined,
+        text: l10n.error_load,
+        actionKey: const ValueKey('banner-retry'),
+        actionLabel: l10n.btn_retry,
+        onAction: onRetry,
+      );
     case MapBannerKind.locationNeeded:
       return MapBanner(
         key: const ValueKey('banner-location-needed'),

@@ -37,7 +37,10 @@ enum LocationStatus {
 }
 
 /// The single banner shown on the map (SPEC-001 §3: max one).
-enum MapBannerKind { locationNeeded, locationOff, noFix, outOfArea }
+///
+/// [loadError] (US-1.2 AC5, `error_load` + Retry) has the top priority; it
+/// comes from the lots controller, never from [LocationController.banner].
+enum MapBannerKind { loadError, locationNeeded, locationOff, noFix, outOfArea }
 
 /// BR-3 refresh triggers raised by US-1.1 (US-1.2 loads the lots).
 enum SearchTrigger {
@@ -435,6 +438,7 @@ class LocationController extends ChangeNotifier {
         unawaited(onTurnOn());
       case MapBannerKind.noFix:
       case MapBannerKind.outOfArea:
+      case MapBannerKind.loadError:
       case null:
         break;
     }
